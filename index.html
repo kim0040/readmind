@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title data-lang-key="pageTitle">
+            리드마인드 (ReadMind) - 속독 훈련 및 텍스트 분석
+        </title>
+        <link rel="icon" href="favicon.png" type="image/png" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <meta
+            name="description"
+            content="ReadMind는 텍스트를 분석하고 원하는 속도로 단어를 읽을 수 있도록 도와주는 온라인 속독 훈련 및 텍스트 분석 도구입니다. 다국어를 지원하며 사용하기 쉽습니다."
+        />
+
+        <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3336611101925677"
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body
+        class="bg-slate-100 dark:bg-gray-900 flex flex-col items-center justify-start min-h-screen p-4 selection:bg-sky-300 selection:text-sky-800 dark:selection:bg-sky-500 dark:selection:text-sky-900"
+        style="font-family: &quot;Inter&quot;, sans-serif"
+    >
+        <div
+            class="main-card bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-2xl my-auto"
+        >
+            <header class="mb-6 text-center">
+                <div class="flex justify-between items-center mb-2">
+                    <h1
+                        id="site-title"
+                        class="text-3xl sm:text-4xl font-bold text-sky-600 dark:text-sky-400"
+                    ></h1>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <select
+                                id="language-selector"
+                                class="appearance-none text-sm p-2 pr-8 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
+                            >
+                                <option value="ko">한국어</option>
+                                <option value="en">English</option>
+                                <option value="ja">日本語</option>
+                                <option value="zh">中文 (简体)</option>
+                                <option value="vi">Tiếng Việt</option>
+                                <option value="hi">हिन्दी</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                                <option value="ar">العربية</option>
+                                <option value="bn">বাংলা</option>
+                                <option value="ru">Русский</option>
+                                <option value="pt">Português</option>
+                                <option value="ur">اردو</option>
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700 dark:text-slate-300"
+                            >
+                                <svg
+                                    class="fill-current h-4 w-4"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                        <button
+                            id="dark-mode-toggle"
+                            title="다크/라이트 모드 전환"
+                            class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
+                        >
+                            <svg
+                                id="theme-toggle-dark-icon"
+                                class="hidden h-6 w-6"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+                                ></path>
+                            </svg>
+                            <svg
+                                id="theme-toggle-light-icon"
+                                class="hidden h-6 w-6"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 10.607a1 1 0 011.414-1.414l.707.707a1 1 0 11-1.414 1.414l-.707-.707zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                ></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <p
+                    class="text-slate-500 dark:text-slate-400 text-sm sm:text-base"
+                    data-lang-key="siteSubtitle"
+                ></p>
+            </header>
+
+            <div class="mb-2">
+                <div class="flex justify-between items-center mb-1.5">
+                    <label
+                        for="text-input"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                        data-lang-key="textInputLabel"
+                    ></label>
+                    <div class="flex items-center space-x-2">
+                        <button
+                            id="clear-text-button"
+                            class="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-medium"
+                            data-lang-key="clearTextButton"
+                        ></button>
+                        <label
+                            for="file-input"
+                            class="text-sm text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 font-medium cursor-pointer"
+                        >
+                            <span data-lang-key="fileInputLabel"></span>
+                            <input
+                                type="file"
+                                id="file-input"
+                                accept=".txt,.md"
+                                class="hidden"
+                            />
+                        </label>
+                    </div>
+                </div>
+                <textarea
+                    id="text-input"
+                    rows="6"
+                    class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out resize-none placeholder-slate-400 dark:placeholder-slate-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200"
+                    data-lang-key="textInputPlaceholder"
+                ></textarea>
+            </div>
+
+            <div
+                id="text-stats-display"
+                class="text-stats mb-6 space-y-1 text-xs sm:text-sm text-left sm:text-right text-slate-600 dark:text-slate-400"
+            >
+                <div>
+                    <span data-lang-key="charsLabel"></span>:
+                    <span id="char-count-with-space" class="stat-value">0</span>
+                    <span
+                        data-lang-key="charsWithSpace"
+                        class="stat-unit"
+                    ></span>
+                    /
+                    <span id="char-count-without-space" class="stat-value"
+                        >0</span
+                    >
+                    <span
+                        data-lang-key="charsWithoutSpace"
+                        class="stat-unit"
+                    ></span>
+                    <span class="separator hidden sm:inline">|</span>
+                    <span class="block sm:hidden my-1"></span>
+                    <span data-lang-key="bytesLabel"></span>:
+                    <span id="byte-count" class="stat-value">0</span>
+                </div>
+                <div>
+                    <span data-lang-key="wordsLabel"></span>:
+                    <span id="word-count" class="stat-value">0</span>
+                    <span class="separator hidden sm:inline">|</span>
+                    <span class="block sm:hidden my-1"></span>
+                    <span data-lang-key="sentencesLabel"></span>:
+                    <span id="sentence-count" class="stat-value">0</span>
+                    <span class="separator hidden sm:inline">|</span>
+                    <span class="block sm:hidden my-1"></span>
+                    <span data-lang-key="paragraphsLabel"></span>:
+                    <span id="paragraph-count" class="stat-value">0</span>
+                </div>
+                <div>
+                    <span data-lang-key="readingTimeLabel"></span>
+                    (<span id="stats-wpm-value" class="stat-value">250</span>
+                    <span id="stats-unit-label">WPM</span>):
+                    <span
+                        id="estimated-reading-time"
+                        class="stat-value"
+                        data-lang-key="timeFormatZero"
+                    ></span>
+                </div>
+            </div>
+
+            <div
+                class="settings-card mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg"
+            >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label
+                            for="wpm-input"
+                            id="wpm-cpm-label"
+                            class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
+                            data-lang-key="wpmLabel"
+                            ><span
+                                id="wpm-value"
+                                class="font-semibold text-sky-500 dark:text-sky-400"
+                                >250</span
+                            ></label
+                        >
+                        <input
+                            type="range"
+                            id="wpm-input"
+                            min="50"
+                            max="1000"
+                            value="250"
+                            step="10"
+                            class="w-full cursor-pointer"
+                        />
+                    </div>
+                    <div
+                        class="flex items-center justify-start sm:justify-end space-x-4"
+                    >
+                        <label
+                            for="fixation-toggle"
+                            class="flex items-center cursor-pointer"
+                        >
+                            <span
+                                class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mr-2"
+                                data-lang-key="fixationPointLabel"
+                            ></span>
+                            <div class="relative">
+                                <input
+                                    type="checkbox"
+                                    id="fixation-toggle"
+                                    class="sr-only toggle-checkbox"
+                                />
+                                <div
+                                    class="toggle-label block bg-slate-300 dark:bg-slate-600 w-10 h-6 rounded-full transition-colors"
+                                ></div>
+                                <div
+                                    class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-100 ease-linear"
+                                ></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-3 items-end mb-4"
+            >
+                <div
+                    class="md:col-start-1 md:col-span-3 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-2"
+                >
+                    <button
+                        id="start-button"
+                        class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-150 ease-in-out"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 inline-block mr-1.5 flex-shrink-0"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                        <span
+                            id="start-button-text"
+                            class="text-xs sm:text-sm whitespace-nowrap"
+                            data-lang-key="startButton"
+                        ></span>
+                    </button>
+                    <button
+                        id="pause-button"
+                        class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-150 ease-in-out"
+                        disabled
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 inline-block mr-1.5 flex-shrink-0"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9H6a1 1 0 000 2h1v2a1 1 0 102 0V9a1 1 0 10-2 0zm5 0h-1a1 1 0 100 2h1v2a1 1 0 102 0V9a1 1 0 10-2 0z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                        <span
+                            id="pause-button-text"
+                            class="text-xs sm:text-sm whitespace-nowrap"
+                            data-lang-key="pauseButton"
+                        ></span>
+                    </button>
+                    <button
+                        id="reset-button"
+                        class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-150 ease-in-out"
+                        disabled
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 inline-block mr-1.5 flex-shrink-0"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M15.323 4.677a.75.75 0 00-1.06-1.06L10 8.939 5.737 4.677a.75.75 0 00-1.06 1.06L8.939 10l-4.262 4.263a.75.75 0 101.06 1.06L10 11.061l4.263 4.262a.75.75 0 001.06-1.06L11.061 10l4.262-4.263z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                        <span
+                            id="reset-button-text"
+                            class="text-xs sm:text-sm whitespace-nowrap"
+                            data-lang-key="resetButton"
+                        ></span>
+                    </button>
+                </div>
+            </div>
+
+            <div
+                id="word-display-area"
+                class="bg-slate-200 dark:bg-slate-600 p-8 text-center rounded-xl min-h-[120px] flex items-center justify-center"
+            >
+                <span
+                    id="current-word"
+                    class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-800 dark:text-slate-100 transition-opacity duration-200 ease-in-out"
+                    data-lang-key="statusReady"
+                ></span>
+            </div>
+
+            <div
+                id="progress-bar-container"
+                class="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-full mt-3 mb-1 overflow-hidden"
+            >
+                <div
+                    id="progress-bar-fill"
+                    class="h-full bg-sky-500 dark:bg-sky-400 rounded-full transition-width duration-200 ease-out"
+                    style="width: 0%"
+                ></div>
+            </div>
+
+            <div
+                class="text-center text-sm text-slate-500 dark:text-slate-400 mb-6"
+            >
+                <span
+                    id="progress-info"
+                    data-lang-key="progressLabelFormat"
+                ></span>
+            </div>
+
+            <div
+                id="adsense-ad-unit-placeholder"
+                style="
+                    min-height: 90px;
+                    background-color: #f0f0f0;
+                    border: 1px dashed #ccc;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    margin-top: 1rem;
+                    margin-bottom: 1rem;
+                    padding: 10px;
+                    border-radius: 0.5rem;
+                "
+                class="text-slate-600 dark:text-slate-400 dark:bg-slate-700 dark:border-slate-600"
+            >
+                <p style="margin: 0">
+                    광고 삽입 구역 <br />(예: 320x100 또는 반응형 광고 단위)
+                </p>
+            </div>
+        </div>
+
+        <div
+            id="custom-message-box"
+            class="message-box fixed top-5 left-1/2 -translate-x-1/2 -translate-y-12 opacity-0 invisible p-4 rounded-md shadow-lg z-[1000] transition-all duration-300 ease-out"
+        >
+            <span id="message-text"></span>
+        </div>
+
+        <footer
+            class="text-center mt-8 mb-4 text-slate-500 dark:text-slate-400 text-xs space-y-1"
+        >
+            <p>
+                &copy; <span id="current-year"></span>
+                <span data-lang-key="footerText"></span>
+            </p>
+            <p>
+                <a
+                    href="#"
+                    id="contact-link"
+                    class="hover:text-sky-500 dark:hover:text-sky-300 transition-colors"
+                    data-lang-key="contactLinkText"
+                ></a>
+            </p>
+        </footer>
+
+        <script src="translations.js"></script>
+        <script src="script.js" defer></script>
+    </body>
+</html>
