@@ -343,3 +343,8 @@ select.appearance-none {
     opacity: 1;
     transform: translateY(0);
 }
+
+/* Drag and Drop Styles */
+.drag-over #drag-drop-overlay {
+    display: flex;
+}

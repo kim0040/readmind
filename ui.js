@@ -50,6 +50,7 @@ export const dom = {
     authSwitchButton: document.getElementById("auth-switch-button"),
     emailInput: document.getElementById("email"),
     passwordInput: document.getElementById("password"),
+    dragDropOverlay: document.getElementById("drag-drop-overlay"),
 };
 
 let isLoginMode = true;
@@ -375,6 +376,47 @@ export function attachEventListeners() {
         });
 
         dom.textInput.addEventListener("input", handleTextChange);
+
+        // Drag and Drop Event Listeners
+        const textInputWrapper = dom.textInput.parentElement;
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            textInputWrapper.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            textInputWrapper.addEventListener(eventName, () => {
+                textInputWrapper.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            textInputWrapper.addEventListener(eventName, () => {
+                textInputWrapper.classList.remove('drag-over');
+            });
+        });
+
+        textInputWrapper.addEventListener('drop', e => {
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                if (file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+                    const reader = new FileReader();
+                    reader.onload = (readEvent) => {
+                        handleTextChange(readEvent.target.result);
+                        showMessage("msgFileLoadSuccess", "success");
+                    };
+                    reader.onerror = () => {
+                        showMessage("msgFileLoadError", "error");
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showMessage("msgFileTypeError", "error");
+                }
+            }
+        });
     }
 
     if (dom.wpmInput) {

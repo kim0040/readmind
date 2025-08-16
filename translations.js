@@ -59,6 +59,7 @@ const translations = {
     msgSignupSuccess: "Signup successful. Welcome!",
     msgLogoutSuccess: "You have been logged out.",
     msgAuthError: "Authentication failed. Please try again.",
+    dropFilePrompt: "Drop file here to load",
   },
   ko: {
     pageTitle: "리드마인드 (ReadMind) - 속독 훈련 및 텍스트 분석",
@@ -120,6 +121,7 @@ const translations = {
     msgSignupSuccess: "회원가입 성공! 환영합니다.",
     msgLogoutSuccess: "로그아웃 되었습니다.",
     msgAuthError: "인증에 실패했습니다. 다시 시도해주세요.",
+    dropFilePrompt: "파일을 여기에 놓아 불러오기",
   },
   ja: {
     pageTitle: "リードマインド (ReadMind) - 速読トレーニング＆テキスト分析",
@@ -181,6 +183,7 @@ const translations = {
     msgSignupSuccess: "会員登録成功。ようこそ！",
     msgLogoutSuccess: "ログアウトしました。",
     msgAuthError: "認証に失敗しました。もう一度お試しください。",
+    dropFilePrompt: "ここにファイルをドロップして読み込む",
   },
   zh: {
     // Chinese (Simplified)
@@ -242,6 +245,7 @@ const translations = {
     msgSignupSuccess: "注册成功。欢迎！",
     msgLogoutSuccess: "您已登出。",
     msgAuthError: "认证失败。请再试一次。",
+    dropFilePrompt: "将文件拖放到此处加载",
   },
   vi: {
     pageTitle: "ReadMind - Luyện đọc nhanh & Phân tích văn bản",
@@ -302,6 +306,7 @@ const translations = {
     msgSignupSuccess: "Đăng ký thành công. Chào mừng!",
     msgLogoutSuccess: "Bạn đã đăng xuất.",
     msgAuthError: "Xác thực không thành công. Vui lòng thử lại.",
+    dropFilePrompt: "Thả tệp vào đây để tải",
   },
   hi: {
     pageTitle: "रीडमाइंड - स्पीड रीडिंग और पाठ विश्लेषण",
@@ -362,6 +367,7 @@ const translations = {
     msgSignupSuccess: "साइनअप सफल। स्वागत है!",
     msgLogoutSuccess: "आप लॉग आउट हो गए हैं।",
     msgAuthError: "प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।",
+    dropFilePrompt: "फ़ाइल लोड करने के लिए यहां छोड़ें",
   },
   es: {
     pageTitle: "ReadMind - Lectura Rápida y Análisis de Texto",
@@ -423,6 +429,7 @@ const translations = {
     msgSignupSuccess: "Registro exitoso. ¡Bienvenido!",
     msgLogoutSuccess: "Has cerrado la sesión.",
     msgAuthError: "Falló la autenticación. Por favor, inténtalo de nuevo.",
+    dropFilePrompt: "Suelta el archivo aquí para cargarlo",
   },
   fr: {
     pageTitle: "ReadMind - Lecture Rapide et Analyse de Texte",
@@ -484,6 +491,7 @@ const translations = {
     msgSignupSuccess: "Inscription réussie. Bienvenue !",
     msgLogoutSuccess: "Vous avez été déconnecté.",
     msgAuthError: "Échec de l'authentification. Veuillez réessayer.",
+    dropFilePrompt: "Déposez le fichier ici pour le charger",
   },
   ar: {
     pageTitle: "ReadMind - قراءة سريعة وتحليل النصوص",
@@ -544,6 +552,7 @@ const translations = {
     msgSignupSuccess: "تم التسجيل بنجاح. أهلاً بك!",
     msgLogoutSuccess: "لقد قمت بتسجيل الخروج.",
     msgAuthError: "فشل المصادقة. يرجى المحاولة مرة أخرى.",
+    dropFilePrompt: "أسقط الملف هنا للتحميل",
   },
   bn: {
     pageTitle: "ReadMind - দ্রুত পঠন এবং পাঠ্য বিশ্লেষণ",
@@ -604,6 +613,7 @@ const translations = {
     msgSignupSuccess: "সাইনআপ সফল। স্বাগতম!",
     msgLogoutSuccess: "আপনি লগ আউট করেছেন।",
     msgAuthError: "প্রমাণೀಕರಣ ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+    dropFilePrompt: "লোড করতে ফাইলটি এখানে ফেলুন",
   },
   ru: {
     pageTitle: "ReadMind - Скорочтение и Анализ Текста",
@@ -665,6 +675,7 @@ const translations = {
     msgSignupSuccess: "Регистрация прошла успешно. Добро пожаловать!",
     msgLogoutSuccess: "Вы вышли из системы.",
     msgAuthError: "Ошибка аутентификации. Пожалуйста, попробуйте еще раз.",
+    dropFilePrompt: "Перетащите файл сюда для загрузки",
   },
   pt: {
     pageTitle: "ReadMind - Leitura Dinâmica e Análise de Texto",
@@ -726,6 +737,7 @@ const translations = {
     msgSignupSuccess: "Cadastro bem-sucedido. Bem-vindo!",
     msgLogoutSuccess: "Você foi desconectado.",
     msgAuthError: "Falha na autenticação. Por favor, tente novamente.",
+    dropFilePrompt: "Solte o arquivo aqui para carregar",
   },
   ur: {
     pageTitle: "ReadMind - تیز رفتار پڑھائی اور متن کا تجزیہ",
@@ -787,5 +799,6 @@ const translations = {
     msgSignupSuccess: "سائن اپ کامیاب۔ خوش آمدید!",
     msgLogoutSuccess: "آپ لاگ آؤٹ ہو चुके ہیں۔",
     msgAuthError: "تصدیق ناکام ہوگئی۔ براہ کرم دوبارہ کوشش کریں۔",
+    dropFilePrompt: "لوڈ کرنے کے لیے فائل یہاں ڈراپ کریں",
   },
 };
