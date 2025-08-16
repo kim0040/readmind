@@ -28,7 +28,10 @@ export function formatWordWithFixation(word) {
 function displayNextWord() {
     if (state.currentIndex < state.words.length) {
         if (dom.currentWordDisplay) {
-            const wordToShow = state.words[state.currentIndex];
+            let currentChunk = state.words[state.currentIndex];
+            // If chunking is active, currentChunk will be an array. Join it.
+            const wordToShow = Array.isArray(currentChunk) ? currentChunk.join(' ') : currentChunk;
+
             dom.currentWordDisplay.innerHTML = formatWordWithFixation(wordToShow);
             dom.currentWordDisplay.style.transition = "none";
             dom.currentWordDisplay.style.opacity = "1";
@@ -50,14 +53,21 @@ function displayNextWord() {
         }
         state.currentIndex++;
         if (dom.progressInfoDisplay) {
+            let unitLabel;
+            if (state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)) {
+                unitLabel = getTranslation("charsLabel");
+            } else if (state.chunkSize > 1) {
+                unitLabel = getTranslation("chunksLabel");
+            } else {
+                unitLabel = getTranslation("wordsLabel");
+            }
+
             dom.progressInfoDisplay.textContent = getTranslation(
                 "progressLabelFormat",
                 state.currentLanguage,
                 "en",
                 {
-                    unit: state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)
-                        ? getTranslation("charsLabel")
-                        : getTranslation("wordsLabel"),
+                    unit: unitLabel,
                     current: state.currentIndex,
                     total: state.words.length,
                 },

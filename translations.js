@@ -60,6 +60,8 @@ const translations = {
     msgLogoutSuccess: "You have been logged out.",
     msgAuthError: "Authentication failed. Please try again.",
     dropFilePrompt: "Drop file here to load",
+    chunkSizeLabel: "Chunk Size:",
+    chunksLabel: "Chunks",
   },
   ko: {
     pageTitle: "리드마인드 (ReadMind) - 속독 훈련 및 텍스트 분석",
@@ -122,6 +124,8 @@ const translations = {
     msgLogoutSuccess: "로그아웃 되었습니다.",
     msgAuthError: "인증에 실패했습니다. 다시 시도해주세요.",
     dropFilePrompt: "파일을 여기에 놓아 불러오기",
+    chunkSizeLabel: "묶음 크기:",
+    chunksLabel: "묶음",
   },
   ja: {
     pageTitle: "リードマインド (ReadMind) - 速読トレーニング＆テキスト分析",
@@ -184,6 +188,8 @@ const translations = {
     msgLogoutSuccess: "ログアウトしました。",
     msgAuthError: "認証に失敗しました。もう一度お試しください。",
     dropFilePrompt: "ここにファイルをドロップして読み込む",
+    chunkSizeLabel: "チャンクサイズ:",
+    chunksLabel: "チャンク",
   },
   zh: {
     // Chinese (Simplified)
@@ -246,6 +252,8 @@ const translations = {
     msgLogoutSuccess: "您已登出。",
     msgAuthError: "认证失败。请再试一次。",
     dropFilePrompt: "将文件拖放到此处加载",
+    chunkSizeLabel: "块大小:",
+    chunksLabel: "块",
   },
   vi: {
     pageTitle: "ReadMind - Luyện đọc nhanh & Phân tích văn bản",
@@ -307,6 +315,8 @@ const translations = {
     msgLogoutSuccess: "Bạn đã đăng xuất.",
     msgAuthError: "Xác thực không thành công. Vui lòng thử lại.",
     dropFilePrompt: "Thả tệp vào đây để tải",
+    chunkSizeLabel: "Kích thước khối:",
+    chunksLabel: "Khối",
   },
   hi: {
     pageTitle: "रीडमाइंड - स्पीड रीडिंग और पाठ विश्लेषण",
@@ -368,6 +378,8 @@ const translations = {
     msgLogoutSuccess: "आप लॉग आउट हो गए हैं।",
     msgAuthError: "प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।",
     dropFilePrompt: "फ़ाइल लोड करने के लिए यहां छोड़ें",
+    chunkSizeLabel: "चंక్ సైజ్:",
+    chunksLabel: "चंक्स",
   },
   es: {
     pageTitle: "ReadMind - Lectura Rápida y Análisis de Texto",
@@ -430,6 +442,8 @@ const translations = {
     msgLogoutSuccess: "Has cerrado la sesión.",
     msgAuthError: "Falló la autenticación. Por favor, inténtalo de nuevo.",
     dropFilePrompt: "Suelta el archivo aquí para cargarlo",
+    chunkSizeLabel: "Tamaño de Fragmento:",
+    chunksLabel: "Fragmentos",
   },
   fr: {
     pageTitle: "ReadMind - Lecture Rapide et Analyse de Texte",
@@ -492,6 +506,8 @@ const translations = {
     msgLogoutSuccess: "Vous avez été déconnecté.",
     msgAuthError: "Échec de l'authentification. Veuillez réessayer.",
     dropFilePrompt: "Déposez le fichier ici pour le charger",
+    chunkSizeLabel: "Taille du Morceau:",
+    chunksLabel: "Morceaux",
   },
   ar: {
     pageTitle: "ReadMind - قراءة سريعة وتحليل النصوص",
@@ -553,6 +569,8 @@ const translations = {
     msgLogoutSuccess: "لقد قمت بتسجيل الخروج.",
     msgAuthError: "فشل المصادقة. يرجى المحاولة مرة أخرى.",
     dropFilePrompt: "أسقط الملف هنا للتحميل",
+    chunkSizeLabel: "حجم القطعة:",
+    chunksLabel: "قطع",
   },
   bn: {
     pageTitle: "ReadMind - দ্রুত পঠন এবং পাঠ্য বিশ্লেষণ",
@@ -614,6 +632,8 @@ const translations = {
     msgLogoutSuccess: "আপনি লগ আউট করেছেন।",
     msgAuthError: "প্রমাণೀಕರಣ ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
     dropFilePrompt: "লোড করতে ফাইলটি এখানে ফেলুন",
+    chunkSizeLabel: "চাঙ্ক সাইজ:",
+    chunksLabel: "চাঙ্ক",
   },
   ru: {
     pageTitle: "ReadMind - Скорочтение и Анализ Текста",
@@ -676,6 +696,8 @@ const translations = {
     msgLogoutSuccess: "Вы вышли из системы.",
     msgAuthError: "Ошибка аутентификации. Пожалуйста, попробуйте еще раз.",
     dropFilePrompt: "Перетащите файл сюда для загрузки",
+    chunkSizeLabel: "Размер куска:",
+    chunksLabel: "Куски",
   },
   pt: {
     pageTitle: "ReadMind - Leitura Dinâmica e Análise de Texto",
@@ -738,6 +760,8 @@ const translations = {
     msgLogoutSuccess: "Você foi desconectado.",
     msgAuthError: "Falha na autenticação. Por favor, tente novamente.",
     dropFilePrompt: "Solte o arquivo aqui para carregar",
+    chunkSizeLabel: "Tamanho do Pedaço:",
+    chunksLabel: "Pedaços",
   },
   ur: {
     pageTitle: "ReadMind - تیز رفتار پڑھائی اور متن کا تجزیہ",
@@ -800,5 +824,7 @@ const translations = {
     msgLogoutSuccess: "آپ لاگ آؤٹ ہو चुके ہیں۔",
     msgAuthError: "تصدیق ناکام ہوگئی۔ براہ کرم دوبارہ کوشش کریں۔",
     dropFilePrompt: "لوڈ کرنے کے لیے فائل یہاں ڈراپ کریں",
+    chunkSizeLabel: "ٹکڑے کا سائز:",
+    chunksLabel: "ٹکڑے",
   },
 };

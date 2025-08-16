@@ -51,6 +51,7 @@ export const dom = {
     emailInput: document.getElementById("email"),
     passwordInput: document.getElementById("password"),
     dragDropOverlay: document.getElementById("drag-drop-overlay"),
+    chunkSizeSelector: document.getElementById("chunk-size-selector"),
 };
 
 let isLoginMode = true;
@@ -317,6 +318,16 @@ export function attachEventListeners() {
                 }),
             );
             window.location.href = `mailto:${state.CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+        });
+    }
+
+    if (dom.chunkSizeSelector) {
+        dom.chunkSizeSelector.addEventListener('change', (e) => {
+            state.chunkSize = parseInt(e.target.value, 10);
+            // Re-process the text with the new chunk size
+            if (dom.textInput.value) {
+                handleTextChange(dom.textInput.value);
+            }
         });
     }
 

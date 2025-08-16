@@ -248,6 +248,19 @@
                     <div
                         class="flex items-center justify-start sm:justify-end space-x-4"
                     >
+                        <div class="flex items-center">
+                            <label for="chunk-size-selector" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mr-2" data-lang-key="chunkSizeLabel"></label>
+                            <div class="relative">
+                                <select id="chunk-size-selector" class="appearance-none text-xs sm:text-sm p-2 pr-8 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 cursor-pointer" tabindex="8">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700 dark:text-slate-300">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                </div>
+                            </div>
+                        </div>
                         <label
                             for="fixation-toggle"
                             class="flex items-center cursor-pointer"
@@ -261,7 +274,7 @@
                                     type="checkbox"
                                     id="fixation-toggle"
                                     class="sr-only toggle-checkbox"
-                                    tabindex="8"
+                                    tabindex="9"
                                 />
                                 <div
                                     class="toggle-label block bg-slate-300 dark:bg-slate-600 w-10 h-6 rounded-full transition-colors"
@@ -284,7 +297,7 @@
                     <button
                         id="start-button"
                         class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-150 ease-in-out"
-                        tabindex="9"
+                        tabindex="10"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -308,7 +321,7 @@
                         id="pause-button"
                         class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-150 ease-in-out"
                         disabled
-                        tabindex="10"
+                        tabindex="11"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -332,7 +345,7 @@
                         id="reset-button"
                         class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-150 ease-in-out"
                         disabled
-                        tabindex="11"
+                        tabindex="12"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

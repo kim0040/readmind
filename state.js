@@ -27,4 +27,5 @@ export const state = {
     userHasManuallySetTheme: false,
     originalPlaceholderText: "",
     encoder: new TextEncoder(),
+    chunkSize: 1,
 };
