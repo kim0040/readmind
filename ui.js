@@ -433,6 +433,30 @@ export function attachEventListeners() {
                 state.intervalId = setInterval(displayNextWord, 60000 / state.currentWpm);
             }
         });
+
+        dom.wpmInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                let currentValue = parseInt(dom.wpmInput.value, 10);
+                const step = parseInt(dom.wpmInput.step, 10) || 10;
+
+                if (e.key === 'ArrowLeft') {
+                    currentValue -= step;
+                } else {
+                    currentValue += step;
+                }
+
+                const min = parseInt(dom.wpmInput.min, 10);
+                const max = parseInt(dom.wpmInput.max, 10);
+
+                if (currentValue < min) currentValue = min;
+                if (currentValue > max) currentValue = max;
+
+                dom.wpmInput.value = currentValue;
+                // Manually trigger the input event to update everything
+                dom.wpmInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
     }
 
     if (dom.darkModeToggle) {
