@@ -103,6 +103,8 @@
                                 ></path>
                             </svg>
                         </button>
+                        <button id="auth-button" class="text-sm font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 px-3 py-2 rounded-md" data-lang-key="loginButton">
+                        </button>
                     </div>
                 </div>
                 <p
@@ -380,6 +382,40 @@
             </div>
         </div>
 
+        <div id="auth-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center">
+            <div id="auth-modal" class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm transform transition-all opacity-0 -translate-y-10">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 id="auth-modal-title" class="text-2xl font-bold text-slate-800 dark:text-slate-200" data-lang-key="loginTitle"></h2>
+                        <button id="close-auth-modal" class="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <form id="auth-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-slate-600 dark:text-slate-300" data-lang-key="emailLabel"></label>
+                                <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-slate-600 dark:text-slate-300" data-lang-key="passwordLabel"></label>
+                                <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button type="submit" id="auth-submit-button" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-75 transition-all duration-150 ease-in-out" data-lang-key="loginButton"></button>
+                        </div>
+                    </form>
+                    <p class="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                        <span id="auth-switch-text" data-lang-key="signupPrompt"></span>
+                        <button id="auth-switch-button" class="font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300" data-lang-key="signupLink"></button>
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <div
             id="custom-message-box"
             class="message-box fixed top-5 left-1/2 -translate-x-1/2 -translate-y-12 opacity-0 invisible p-4 rounded-md shadow-lg z-[1000] transition-all duration-300 ease-out"
@@ -405,6 +441,6 @@
         </footer>
 
         <script src="translations.js"></script>
-        <script src="script.js" defer></script>
+        <script type="module" src="main.js"></script>
     </body>
 </html>
