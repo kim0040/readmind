@@ -3,9 +3,10 @@
 import { state } from "./state.js";
 import { formatWordWithFixation, pauseReading, startReadingFlow } from "./reader.js";
 import { handleTextChange, updateTextStats } from "./text_handler.js";
+import { logInWithEmail, signUpWithEmail, logOut } from "./firebase.js";
 
 export const dom = {
-    // Existing DOM elements
+    // ... (existing DOM elements are the same)
     textInput: document.getElementById("text-input"),
     fileInput: document.getElementById("file-input"),
     wpmInput: document.getElementById("wpm-input"),
@@ -38,8 +39,6 @@ export const dom = {
     siteTitleH1: document.getElementById("site-title"),
     contactLink: document.getElementById("contact-link"),
     clearTextButton: document.getElementById("clear-text-button"),
-
-    // Auth Modal Elements
     authButton: document.getElementById("auth-button"),
     authModalOverlay: document.getElementById("auth-modal-overlay"),
     authModal: document.getElementById("auth-modal"),
@@ -51,12 +50,15 @@ export const dom = {
     authSwitchButton: document.getElementById("auth-switch-button"),
     emailInput: document.getElementById("email"),
     passwordInput: document.getElementById("password"),
+    dragDropOverlay: document.getElementById("drag-drop-overlay"),
+    chunkSizeSelector: document.getElementById("chunk-size-selector"),
 };
 
 let isLoginMode = true;
 
 function openAuthModal() {
     if (!dom.authModalOverlay) return;
+    setupAuthModal(true);
     dom.authModalOverlay.classList.remove('hidden');
     dom.authModalOverlay.style.display = 'flex';
     setTimeout(() => {
@@ -75,21 +77,39 @@ function closeAuthModal() {
 
 function setupAuthModal(isLogin) {
     isLoginMode = isLogin;
+    dom.authForm.reset();
     if (isLogin) {
-        dom.authModalTitle.textContent = getTranslation("loginTitle");
-        dom.authSubmitButton.textContent = getTranslation("loginButton");
-        dom.authSwitchText.textContent = getTranslation("signupPrompt");
-        dom.authSwitchButton.textContent = getTranslation("signupLink");
+        dom.authModalTitle.dataset.langKey = "loginTitle";
+        dom.authSubmitButton.dataset.langKey = "loginButton";
+        dom.authSwitchText.dataset.langKey = "signupPrompt";
+        dom.authSwitchButton.dataset.langKey = "signupLink";
     } else {
-        dom.authModalTitle.textContent = getTranslation("signupTitle");
-        dom.authSubmitButton.textContent = getTranslation("signupLink");
-        dom.authSwitchText.textContent = getTranslation("loginPrompt");
-        dom.authSwitchButton.textContent = getTranslation("loginLink");
+        dom.authModalTitle.dataset.langKey = "signupTitle";
+        dom.authSubmitButton.dataset.langKey = "signupLink";
+        dom.authSwitchText.dataset.langKey = "loginPrompt";
+        dom.authSwitchButton.dataset.langKey = "loginLink";
+    }
+    // Re-translate the modal content
+    dom.authModalTitle.textContent = getTranslation(dom.authModalTitle.dataset.langKey);
+    dom.authSubmitButton.textContent = getTranslation(dom.authSubmitButton.dataset.langKey);
+    dom.authSwitchText.textContent = getTranslation(dom.authSwitchText.dataset.langKey);
+    dom.authSwitchButton.textContent = getTranslation(dom.authSwitchButton.dataset.langKey);
+}
+
+export function updateAuthUI(user) {
+    if (user) {
+        // User is signed in
+        dom.authButton.textContent = getTranslation("logoutButton");
+        dom.authButton.dataset.isLoggedIn = "true";
+    } else {
+        // User is signed out
+        dom.authButton.textContent = getTranslation("loginButton");
+        dom.authButton.dataset.isLoggedIn = "false";
     }
 }
 
-
 export function getTranslation(key, lang = state.currentLanguage, fallbackLang = "en", params = null) {
+    // ... (same as before)
     const langToUse = translations[lang] ? lang : fallbackLang;
     let text =
         translations[langToUse]?.[key] ||
@@ -104,6 +124,7 @@ export function getTranslation(key, lang = state.currentLanguage, fallbackLang =
 }
 
 export function applyTheme(isDark) {
+    // ... (same as before)
     if (isDark) {
         document.documentElement.classList.add("dark");
         if (dom.themeToggleDarkIcon) dom.themeToggleDarkIcon.classList.remove("hidden");
@@ -116,6 +137,7 @@ export function applyTheme(isDark) {
 }
 
 export function setLanguage(lang, isInitializing = false) {
+    // ... (same as before, but we need to re-translate the auth button on language change)
     state.currentLanguage = lang;
     localStorage.setItem(state.LS_KEYS.LANGUAGE, lang);
     if (dom.languageSelector) dom.languageSelector.value = lang;
@@ -202,9 +224,16 @@ export function setLanguage(lang, isInitializing = false) {
             getTranslation(state.NO_SPACE_LANGUAGES.includes(state.currentLanguage) ? "cpmLabel" : "wpmLabel") +
             ` <span id="wpm-value" class="font-semibold text-sky-500 dark:text-sky-400">${state.currentWpm}</span>`;
     }
+    // Update auth button text on language change
+    if (dom.authButton.dataset.isLoggedIn === "true") {
+        dom.authButton.textContent = getTranslation("logoutButton");
+    } else {
+        dom.authButton.textContent = getTranslation("loginButton");
+    }
 }
 
 export function showMessage(messageKey, type = "info", duration = 3000, interpolateParams = null) {
+    // ... (same as before)
     if (!dom.customMessageBox || !dom.messageText) return;
     dom.messageText.textContent = getTranslation(messageKey, state.currentLanguage, "en", interpolateParams);
     dom.customMessageBox.className = `message-box ${type}`;
@@ -234,6 +263,7 @@ export function showMessage(messageKey, type = "info", duration = 3000, interpol
 }
 
 export function updateButtonStates(buttonState) {
+    // ... (same as before)
     if (!dom.startButton || !dom.pauseButton || !dom.resetButton || !dom.startButtonText || !dom.pauseButtonText || !document.getElementById("reset-button-text")) return;
 
     dom.startButtonText.textContent = getTranslation("startButton");
@@ -274,7 +304,7 @@ export function updateButtonStates(buttonState) {
 }
 
 export function attachEventListeners() {
-    // Existing event listeners...
+    // ... (existing event listeners are the same)
     if (dom.contactLink) {
         dom.contactLink.addEventListener("click", (e) => {
             e.preventDefault();
@@ -288,6 +318,16 @@ export function attachEventListeners() {
                 }),
             );
             window.location.href = `mailto:${state.CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+        });
+    }
+
+    if (dom.chunkSizeSelector) {
+        dom.chunkSizeSelector.addEventListener('change', (e) => {
+            state.chunkSize = parseInt(e.target.value, 10);
+            // Re-process the text with the new chunk size
+            if (dom.textInput.value) {
+                handleTextChange(dom.textInput.value);
+            }
         });
     }
 
@@ -347,6 +387,47 @@ export function attachEventListeners() {
         });
 
         dom.textInput.addEventListener("input", handleTextChange);
+
+        // Drag and Drop Event Listeners
+        const textInputWrapper = dom.textInput.parentElement;
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            textInputWrapper.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            textInputWrapper.addEventListener(eventName, () => {
+                textInputWrapper.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            textInputWrapper.addEventListener(eventName, () => {
+                textInputWrapper.classList.remove('drag-over');
+            });
+        });
+
+        textInputWrapper.addEventListener('drop', e => {
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                if (file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+                    const reader = new FileReader();
+                    reader.onload = (readEvent) => {
+                        handleTextChange(readEvent.target.result);
+                        showMessage("msgFileLoadSuccess", "success");
+                    };
+                    reader.onerror = () => {
+                        showMessage("msgFileLoadError", "error");
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showMessage("msgFileTypeError", "error");
+                }
+            }
+        });
     }
 
     if (dom.wpmInput) {
@@ -361,6 +442,30 @@ export function attachEventListeners() {
             if (state.intervalId && !state.isPaused) {
                 clearInterval(state.intervalId);
                 state.intervalId = setInterval(displayNextWord, 60000 / state.currentWpm);
+            }
+        });
+
+        dom.wpmInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                let currentValue = parseInt(dom.wpmInput.value, 10);
+                const step = parseInt(dom.wpmInput.step, 10) || 10;
+
+                if (e.key === 'ArrowLeft') {
+                    currentValue -= step;
+                } else {
+                    currentValue += step;
+                }
+
+                const min = parseInt(dom.wpmInput.min, 10);
+                const max = parseInt(dom.wpmInput.max, 10);
+
+                if (currentValue < min) currentValue = min;
+                if (currentValue > max) currentValue = max;
+
+                dom.wpmInput.value = currentValue;
+                // Manually trigger the input event to update everything
+                dom.wpmInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
         });
     }
@@ -422,11 +527,21 @@ export function attachEventListeners() {
         dom.languageSelector.addEventListener("change", (event) => setLanguage(event.target.value));
     }
 
-    // Auth modal event listeners
+    // --- Auth modal event listeners ---
     if (dom.authButton) {
         dom.authButton.addEventListener("click", () => {
-            setupAuthModal(true); // Open in login mode by default
-            openAuthModal();
+            if (dom.authButton.dataset.isLoggedIn === "true") {
+                // If user is logged in, this button is the "Logout" button
+                logOut().then(() => {
+                    showMessage("msgLogoutSuccess", "success");
+                }).catch((error) => {
+                    console.error("Logout error:", error);
+                    showMessage("msgAuthError", "error");
+                });
+            } else {
+                // If user is logged out, this button opens the login modal
+                openAuthModal();
+            }
         });
     }
 
@@ -449,10 +564,24 @@ export function attachEventListeners() {
     }
 
     if (dom.authForm) {
-        dom.authForm.addEventListener("submit", (event) => {
+        dom.authForm.addEventListener("submit", async (event) => {
             event.preventDefault();
-            showMessage("msgAuthNotImplemented", "info");
-            closeAuthModal();
+            const email = dom.emailInput.value;
+            const password = dom.passwordInput.value;
+
+            try {
+                if (isLoginMode) {
+                    await logInWithEmail(email, password);
+                    showMessage("msgLoginSuccess", "success");
+                } else {
+                    await signUpWithEmail(email, password);
+                    showMessage("msgSignupSuccess", "success");
+                }
+                closeAuthModal();
+            } catch (error) {
+                console.error("Authentication error:", error.code, error.message);
+                showMessage("msgAuthError", "error");
+            }
         });
     }
 }

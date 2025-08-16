@@ -1,8 +1,9 @@
 // main.js - The entry point of the application.
 import { state } from './state.js';
-import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates } from './ui.js';
+import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI } from './ui.js';
 import { updateTextStats } from './text_handler.js';
 import { formatWordWithFixation, updateProgressBar } from './reader.js';
+import { onAuthStateChangedListener } from './firebase.js';
 
 function applySavedSettings() {
     const savedLanguage = localStorage.getItem(state.LS_KEYS.LANGUAGE);
@@ -92,6 +93,7 @@ function initializeApp() {
     updateButtonStates(initialState);
     updateProgressBar();
     attachEventListeners();
+    onAuthStateChangedListener(updateAuthUI);
 }
 
 // Wait for the DOM to be fully loaded before initializing

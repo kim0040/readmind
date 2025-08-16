@@ -10,15 +10,27 @@ export function updateTextStats() {
     if (!dom.textInput) return;
     const currentText = dom.textInput.value;
 
+    let words;
     if (state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)) {
-        state.words = currentText.replace(/\s+/g, "").split("");
+        words = currentText.replace(/\s+/g, "").split("");
     } else {
-        state.words = currentText
+        words = currentText
             .trim()
             .split(/\s+/)
             .filter((word) => word.length > 0);
     }
-    const wordCount = state.words.length;
+
+    const wordCount = words.length;
+
+    if (state.chunkSize > 1 && !state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)) {
+        const chunkedWords = [];
+        for (let i = 0; i < wordCount; i += state.chunkSize) {
+            chunkedWords.push(words.slice(i, i + state.chunkSize));
+        }
+        state.words = chunkedWords;
+    } else {
+        state.words = words;
+    }
 
     if (dom.charCountWithSpaceDisplay)
         dom.charCountWithSpaceDisplay.textContent = currentText.length;
@@ -77,7 +89,7 @@ export function updateTextStats() {
                     ? getTranslation("charsLabel")
                     : getTranslation("wordsLabel"),
                 current: state.currentIndex,
-                total: wordCount,
+                total: state.words.length, // Total is now the number of chunks
             },
         );
     }
