@@ -1,4 +1,4 @@
-localhost
+your_domain.com
 
 root * /app/public
 file_server
