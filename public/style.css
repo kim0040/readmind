@@ -348,3 +348,22 @@ select.appearance-none {
 .drag-over #drag-drop-overlay {
     display: flex;
 }
+
+/* Auth Modal Styles */
+#auth-modal-overlay {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#auth-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+#auth-modal {
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+#auth-modal-overlay.show #auth-modal {
+    opacity: 1;
+    transform: translateY(0);
+}
