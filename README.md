@@ -100,5 +100,31 @@ readmind/
 │   └── translations.js  # 다국어 텍스트 모듈
 │
 ├── setup.sh             # Ubuntu 서버 자동 설치 스크립트
+├── traffic-limiter.sh   # (선택) 월별 트래픽 제한 스크립트
 └── README.md            # 프로젝트 설명서
 ```
+
+## (선택) 월별 트래픽 제한 설정
+
+이 프로젝트에는 `vnStat`과 `iptables`를 사용하여 서버의 월별 총 네트워크 트래픽을 제한하는 스크립트가 포함되어 있습니다. 설정한 사용량을 초과하면 웹 트래픽(포트 80, 443)이 자동으로 차단됩니다.
+
+### 설정 방법
+
+1.  **스크립트 실행 권한 부여**:
+    ```bash
+    chmod +x traffic-limiter.sh
+    ```
+
+2.  **네트워크 인터페이스 확인 및 수정**:
+    스크립트 상단의 `INTERFACE` 변수를 자신의 서버에 맞는 네트워크 인터페이스 이름으로 변경해야 할 수 있습니다. `ip a` 또는 `ifconfig` 명령어로 확인하세요. (예: `eth0`, `ens3`)
+
+3.  **Cron 작업 등록**:
+    이 스크립트가 주기적으로 실행되도록 `cron`에 등록해야 합니다. 아래는 매시간 실행되도록 등록하는 예시입니다.
+
+    *   `crontab -e` 명령어로 편집기를 엽니다.
+    *   아래 내용을 파일 맨 끝에 추가하고 저장합니다. `YOUR_PROJECT_PATH`는 이 프로젝트의 전체 경로로 변경해주세요.
+
+    ```crontab
+    0 * * * * /usr/bin/sudo /bin/bash YOUR_PROJECT_PATH/traffic-limiter.sh >> YOUR_PROJECT_PATH/traffic-limiter.log 2>&1
+    ```
+    이 설정은 매시간 0분에 스크립트를 실행하고, 실행 결과를 `traffic-limiter.log` 파일에 기록합니다.
