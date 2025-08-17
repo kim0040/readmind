@@ -1,0 +1,6 @@
+localhost
+
+root * /app/public
+file_server
+
+reverse_proxy /api/* http://localhost:3000

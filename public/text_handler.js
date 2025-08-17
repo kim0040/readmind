@@ -4,8 +4,6 @@ import { dom, getTranslation, updateButtonStates } from "./ui.js";
 import { state } from "./state.js";
 import { formatWordWithFixation, updateProgressBar } from "./reader.js";
 
-const encoder = new TextEncoder();
-
 export function updateTextStats() {
     if (!dom.textInput) return;
     const currentText = dom.textInput.value;

@@ -3,10 +3,9 @@
 import { state } from "./state.js";
 import { formatWordWithFixation, pauseReading, startReadingFlow } from "./reader.js";
 import { handleTextChange, updateTextStats } from "./text_handler.js";
-import { logInWithEmail, signUpWithEmail, logOut } from "./firebase.js";
 
 export const dom = {
-    // ... (existing DOM elements are the same)
+    // Existing DOM elements
     textInput: document.getElementById("text-input"),
     fileInput: document.getElementById("file-input"),
     wpmInput: document.getElementById("wpm-input"),
@@ -39,6 +38,8 @@ export const dom = {
     siteTitleH1: document.getElementById("site-title"),
     contactLink: document.getElementById("contact-link"),
     clearTextButton: document.getElementById("clear-text-button"),
+
+    // Auth Modal Elements
     authButton: document.getElementById("auth-button"),
     authModalOverlay: document.getElementById("auth-modal-overlay"),
     authModal: document.getElementById("auth-modal"),
@@ -96,20 +97,24 @@ function setupAuthModal(isLogin) {
     dom.authSwitchButton.textContent = getTranslation(dom.authSwitchButton.dataset.langKey);
 }
 
-export function updateAuthUI(user) {
+function updateAuthUI(user) {
     if (user) {
-        // User is signed in
         dom.authButton.textContent = getTranslation("logoutButton");
         dom.authButton.dataset.isLoggedIn = "true";
     } else {
-        // User is signed out
         dom.authButton.textContent = getTranslation("loginButton");
         dom.authButton.dataset.isLoggedIn = "false";
     }
 }
 
+function checkLoginState() {
+    const user = JSON.parse(localStorage.getItem('readMindUser'));
+    updateAuthUI(user);
+}
+
+// ... (rest of the functions like getTranslation, applyTheme, etc. are the same)
+
 export function getTranslation(key, lang = state.currentLanguage, fallbackLang = "en", params = null) {
-    // ... (same as before)
     const langToUse = translations[lang] ? lang : fallbackLang;
     let text =
         translations[langToUse]?.[key] ||
@@ -124,7 +129,6 @@ export function getTranslation(key, lang = state.currentLanguage, fallbackLang =
 }
 
 export function applyTheme(isDark) {
-    // ... (same as before)
     if (isDark) {
         document.documentElement.classList.add("dark");
         if (dom.themeToggleDarkIcon) dom.themeToggleDarkIcon.classList.remove("hidden");
@@ -137,7 +141,6 @@ export function applyTheme(isDark) {
 }
 
 export function setLanguage(lang, isInitializing = false) {
-    // ... (same as before, but we need to re-translate the auth button on language change)
     state.currentLanguage = lang;
     localStorage.setItem(state.LS_KEYS.LANGUAGE, lang);
     if (dom.languageSelector) dom.languageSelector.value = lang;
@@ -224,16 +227,11 @@ export function setLanguage(lang, isInitializing = false) {
             getTranslation(state.NO_SPACE_LANGUAGES.includes(state.currentLanguage) ? "cpmLabel" : "wpmLabel") +
             ` <span id="wpm-value" class="font-semibold text-sky-500 dark:text-sky-400">${state.currentWpm}</span>`;
     }
-    // Update auth button text on language change
-    if (dom.authButton.dataset.isLoggedIn === "true") {
-        dom.authButton.textContent = getTranslation("logoutButton");
-    } else {
-        dom.authButton.textContent = getTranslation("loginButton");
-    }
+     // Update auth button text on language change
+    checkLoginState();
 }
 
 export function showMessage(messageKey, type = "info", duration = 3000, interpolateParams = null) {
-    // ... (same as before)
     if (!dom.customMessageBox || !dom.messageText) return;
     dom.messageText.textContent = getTranslation(messageKey, state.currentLanguage, "en", interpolateParams);
     dom.customMessageBox.className = `message-box ${type}`;
@@ -263,7 +261,6 @@ export function showMessage(messageKey, type = "info", duration = 3000, interpol
 }
 
 export function updateButtonStates(buttonState) {
-    // ... (same as before)
     if (!dom.startButton || !dom.pauseButton || !dom.resetButton || !dom.startButtonText || !dom.pauseButtonText || !document.getElementById("reset-button-text")) return;
 
     dom.startButtonText.textContent = getTranslation("startButton");
@@ -303,8 +300,18 @@ export function updateButtonStates(buttonState) {
     }
 }
 
+
 export function attachEventListeners() {
-    // ... (existing event listeners are the same)
+    if (dom.chunkSizeSelector) {
+        dom.chunkSizeSelector.addEventListener('change', (e) => {
+            state.chunkSize = parseInt(e.target.value, 10);
+            // Re-process the text with the new chunk size
+            if (dom.textInput.value) {
+                handleTextChange(dom.textInput.value);
+            }
+        });
+    }
+
     if (dom.contactLink) {
         dom.contactLink.addEventListener("click", (e) => {
             e.preventDefault();
@@ -318,16 +325,6 @@ export function attachEventListeners() {
                 }),
             );
             window.location.href = `mailto:${state.CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-        });
-    }
-
-    if (dom.chunkSizeSelector) {
-        dom.chunkSizeSelector.addEventListener('change', (e) => {
-            state.chunkSize = parseInt(e.target.value, 10);
-            // Re-process the text with the new chunk size
-            if (dom.textInput.value) {
-                handleTextChange(dom.textInput.value);
-            }
         });
     }
 
@@ -530,16 +527,12 @@ export function attachEventListeners() {
     // --- Auth modal event listeners ---
     if (dom.authButton) {
         dom.authButton.addEventListener("click", () => {
-            if (dom.authButton.dataset.isLoggedIn === "true") {
-                // If user is logged in, this button is the "Logout" button
-                logOut().then(() => {
-                    showMessage("msgLogoutSuccess", "success");
-                }).catch((error) => {
-                    console.error("Logout error:", error);
-                    showMessage("msgAuthError", "error");
-                });
+            const isLoggedIn = dom.authButton.dataset.isLoggedIn === "true";
+            if (isLoggedIn) {
+                localStorage.removeItem('readMindUser');
+                updateAuthUI(null);
+                showMessage("msgLogoutSuccess", "success");
             } else {
-                // If user is logged out, this button opens the login modal
                 openAuthModal();
             }
         });
@@ -568,18 +561,34 @@ export function attachEventListeners() {
             event.preventDefault();
             const email = dom.emailInput.value;
             const password = dom.passwordInput.value;
+            const endpoint = isLoginMode ? '/api/login' : '/api/signup';
 
             try {
-                if (isLoginMode) {
-                    await logInWithEmail(email, password);
-                    showMessage("msgLoginSuccess", "success");
-                } else {
-                    await signUpWithEmail(email, password);
-                    showMessage("msgSignupSuccess", "success");
+                const response = await fetch(`http://localhost:3000${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Authentication failed');
                 }
+
+                showMessage(isLoginMode ? "msgLoginSuccess" : "msgSignupSuccess", "success");
+
+                if (data.user) {
+                    localStorage.setItem('readMindUser', JSON.stringify(data.user));
+                    updateAuthUI(data.user);
+                }
+
                 closeAuthModal();
+
             } catch (error) {
-                console.error("Authentication error:", error.code, error.message);
+                console.error("Authentication error:", error.message);
                 showMessage("msgAuthError", "error");
             }
         });
