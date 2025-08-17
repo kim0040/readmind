@@ -1,6 +1,6 @@
 your_domain.com
 
-root * /app/public
+root * public
 file_server
 
 reverse_proxy /api/* http://localhost:3000

@@ -54,11 +54,11 @@
     sudo ufw enable
     ```
 
-### 2단계: Caddy 설정
+### 2단계: Caddy 설정 및 실행
 
-1.  **Caddyfile 수정**:
-    Caddy가 자동으로 HTTPS 인증서를 발급받으려면, 실제 도메인 이름이 필요합니다. `Caddyfile`을 열어 맨 첫 줄의 `your_domain.com`을 자신의 도메인으로 수정하세요.
-    ```
+1.  **Caddyfile 수정 (매우 중요!)**:
+    Caddy가 자동으로 HTTPS 인증서를 발급받으려면, 실제 도메인 이름이 필요합니다. `Caddyfile`을 열어 맨 첫 줄의 `your_domain.com`을 **자신의 실제 도메인으로 수정**하세요.
+    ```bash
     nano Caddyfile
     ```
 
@@ -74,21 +74,28 @@
     # 서비스 상태 확인
     sudo systemctl status caddy
     ```
+    `Caddyfile`의 `root * public` 설정은 Caddyfile이 위치한 곳을 기준으로 `public` 디렉토리를 찾으므로, 프로젝트를 어느 경로에 두어도 올바르게 작동합니다.
 
 ### 3단계: 백엔드 서버 서비스로 실행하기
 
 터미널을 종료해도 백엔드 서버가 계속 실행되도록 `systemd` 서비스로 등록합니다.
 
-1.  **systemd 서비스 파일 생성**:
-    아래 명령어로 서비스 파일을 생성하고 편집기를 엽니다.
+1.  **프로젝트 절대 경로 확인 (매우 중요!)**:
+    `systemd` 서비스는 전체(절대) 경로를 사용해야 합니다. 프로젝트의 루트 디렉토리에서 아래 명령어를 실행하여 현재 경로를 복사해두세요.
+    ```bash
+    pwd
+    # 예시 출력: /home/ubuntu/readmind
+    ```
+
+2.  **systemd 서비스 파일 생성**:
     ```bash
     sudo nano /etc/systemd/system/readmind-backend.service
     ```
 
-2.  **서비스 파일 내용 붙여넣기**:
-    아래 내용을 그대로 복사하여 붙여넣습니다. `YOUR_PROJECT_PATH`와 `YOUR_USERNAME`은 실제 환경에 맞게 수정해야 합니다.
-    *   `YOUR_PROJECT_PATH`: `pwd` 명령어로 현재 프로젝트의 전체 경로를 확인하여 입력하세요.
-    *   `YOUR_USERNAME`: `whoami` 명령어로 현재 사용자 이름을 확인하여 입력하세요.
+3.  **서비스 파일 내용 붙여넣기**:
+    아래 내용을 그대로 복사하여 붙여넣습니다. **`YOUR_PROJECT_PATH`**와 **`YOUR_USERNAME`** 두 부분을 **반드시** 실제 값으로 수정해야 합니다.
+    *   `YOUR_PROJECT_PATH`: 방금 전 `pwd`로 확인한 **전체 경로**로 변경합니다. (예: `/home/ubuntu/readmind`)
+    *   `YOUR_USERNAME`: `whoami` 명령어로 확인한 사용자 이름으로 변경합니다. (예: `ubuntu`)
 
     ```ini
     [Unit]
@@ -110,19 +117,12 @@
     WantedBy=multi-user.target
     ```
 
-3.  **백엔드 서비스 시작**:
+4.  **백엔드 서비스 시작**:
     서비스 파일을 저장한 후, 아래 명령어를 순서대로 실행하여 백엔드 서비스를 시작하고, 부팅 시 자동 실행되도록 설정합니다.
     ```bash
-    # systemd가 새 서비스 파일을 인식하도록 리로드
     sudo systemctl daemon-reload
-
-    # 백엔드 서비스 시작
     sudo systemctl start readmind-backend
-
-    # 부팅 시 자동 실행 활성화
     sudo systemctl enable readmind-backend
-
-    # 서비스 상태 확인
     sudo systemctl status readmind-backend
     ```
 
@@ -132,4 +132,17 @@
 
 ## (선택) 월별 트래픽 제한 설정
 
-`traffic-limiter.sh` 스크립트는 서버의 월별 총 네트워크 트래픽을 제한합니다. `cron` 작업을 통해 주기적으로 실행되도록 설정해야 합니다. 자세한 내용은 스크립트 파일 내의 주석과 이전 `README.md` 섹션을 참고하세요.
+`traffic-limiter.sh` 스크립트는 서버의 월별 총 네트워크 트래픽을 제한합니다. `cron` 작업을 통해 주기적으로 실행되도록 설정해야 합니다.
+
+1.  **스크립트 실행 권한 부여 및 인터페이스 확인**:
+    ```bash
+    chmod +x traffic-limiter.sh
+    ```
+    스크립트 파일 상단의 `INTERFACE` 변수를 `ip a` 명령어로 확인한 자신의 주 네트워크 인터페이스 이름으로 수정하세요.
+
+2.  **Cron 작업 등록**:
+    `crontab -e` 명령어로 편집기를 열고 아래 내용을 추가합니다. **`YOUR_PROJECT_PATH`**는 **반드시 `pwd`로 확인한 전체(절대) 경로로 수정**해야 합니다.
+    ```crontab
+    # 매시간 0분에 트래픽 검사 실행
+    0 * * * * /usr/bin/sudo /bin/bash YOUR_PROJECT_PATH/traffic-limiter.sh >> YOUR_PROJECT_PATH/traffic-limiter.log 2>&1
+    ```
