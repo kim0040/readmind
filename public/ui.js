@@ -2,7 +2,7 @@
 
 import * as auth from './auth.js';
 import { state } from "./state.js";
-import { scheduleSave, handleSuccessfulLogin } from "./main.js";
+import { scheduleSave, handleSuccessfulLogin, handleLogout } from "./main.js";
 import { formatWordWithFixation, pauseReading, startReadingFlow } from "./reader.js";
 import { handleTextChange, updateTextStats } from "./text_handler.js";
 
@@ -564,13 +564,7 @@ export function attachEventListeners() {
     }
 
     if (dom.logoutButton) {
-        dom.logoutButton.addEventListener("click", () => {
-            auth.logout();
-            updateAuthUI();
-            showMessage("msgLogoutSuccess", "success");
-            // Potentially reload settings for guest user
-            // This will be handled in the main state management logic
-        });
+        dom.logoutButton.addEventListener("click", handleLogout);
     }
 
     if (dom.closeAuthModalButton) {

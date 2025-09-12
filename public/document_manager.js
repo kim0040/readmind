@@ -2,6 +2,7 @@ import * as auth from './auth.js';
 import { dom, showMessage } from './ui.js';
 import { state } from './state.js';
 import { handleTextChange } from './text_handler.js';
+import { debounce } from './utils.js';
 
 let saveTimeout;
 
@@ -153,7 +154,7 @@ export function attachDocumentEventListeners() {
 
     // Connect editor changes to the debounced save function
     if (state.simplemde) {
-        state.simplemde.codemirror.on("change", () => {
+        state.simplemde.codemirror.on("change", debounce(() => {
             if (state.activeDocument) {
                 scheduleDocumentSave();
             }
@@ -161,7 +162,7 @@ export function attachDocumentEventListeners() {
             if (dom.textInput) {
                 dom.textInput.value = state.simplemde.value();
             }
-        });
+        }, 500));
     }
 
     // Connect the "Start" button to use the editor's content

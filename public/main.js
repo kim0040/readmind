@@ -118,6 +118,17 @@ export async function handleSuccessfulLogin() {
     updateTextStats();
 }
 
+export function handleLogout() {
+    auth.logout();
+    state.activeDocument = null;
+    if (state.simplemde) {
+        state.simplemde.value('');
+    }
+    updateAuthUI();
+    renderDocumentList();
+    showMessage('msgLogoutSuccess', 'success');
+}
+
 
 async function initializeApp() {
     if (dom.currentYearSpan) dom.currentYearSpan.textContent = new Date().getFullYear();
