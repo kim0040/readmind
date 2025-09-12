@@ -16,6 +16,11 @@ app.use(express.json()); // Middleware to parse JSON bodies
 
 // --- API Routes ---
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Backend is running.' });
+});
+
 // Signup endpoint
 app.post('/api/signup', async (req, res) => {
     const { email, password } = req.body;
@@ -37,8 +42,24 @@ app.post('/api/signup', async (req, res) => {
             'INSERT INTO users (email, password_hash) VALUES (?, ?)',
             [email, passwordHash]
         );
+        const newUserId = result.lastID;
 
-        res.status(201).json({ message: 'User created successfully.', userId: result.lastID });
+        // Also log the user in by returning a JWT
+        const payload = {
+            user: {
+                id: newUserId,
+                email: email,
+            },
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: '7d',
+        });
+
+        res.status(201).json({
+            message: 'User created successfully.',
+            token,
+        });
     } catch (err) {
         console.error('Signup error:', err.message);
         res.status(500).json({ message: 'Server error during signup.' });

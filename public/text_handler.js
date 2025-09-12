@@ -1,19 +1,76 @@
 // text_handler.js - Handles text statistics and input changes
 
-import { dom, getTranslation, updateButtonStates } from "./ui.js";
+import { dom, getTranslation, updateButtonStates, showMessage } from "./ui.js";
 import { state } from "./state.js";
 import { scheduleSave } from "./main.js";
 import { formatWordWithFixation, updateProgressBar } from "./reader.js";
 
-export function updateTextStats() {
+// --- Kuromoji Tokenizer Initialization ---
+let kuromojiTokenizer = null;
+let isTokenizerBuilding = false;
+
+/**
+ * Initializes the Kuromoji tokenizer. Uses a promise-based approach
+ * to handle the callback nature of the library.
+ * @returns {Promise<object>} A promise that resolves with the tokenizer instance.
+ */
+function getTokenizer() {
+    return new Promise((resolve, reject) => {
+        if (kuromojiTokenizer) {
+            return resolve(kuromojiTokenizer);
+        }
+        if (isTokenizerBuilding) {
+            // Wait for the tokenizer to finish building
+            const interval = setInterval(() => {
+                if (kuromojiTokenizer) {
+                    clearInterval(interval);
+                    resolve(kuromojiTokenizer);
+                }
+            }, 100);
+            return;
+        }
+        isTokenizerBuilding = true;
+        showMessage('msgTokenizerLoading', 'info', 10000); // Show a long-lasting message
+
+        kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji/dict/" }).build((err, tokenizer) => {
+            isTokenizerBuilding = false;
+            if (err) {
+                console.error("Kuromoji Build Error:", err);
+                showMessage('msgTokenizerError', 'error');
+                return reject(err);
+            }
+            kuromojiTokenizer = tokenizer;
+            showMessage('msgTokenizerReady', 'success');
+            resolve(tokenizer);
+        });
+    });
+}
+
+
+export async function updateTextStats() {
     if (!dom.textInput) return;
     const currentText = dom.textInput.value;
 
+    // --- Text Cleaning ---
+    // Remove URLs, email addresses, and other special characters that disrupt reading flow.
+    const urlRegex = /https?:\/\/[^\s/$.?#].[^\s]*/g;
+    const emailRegex = /\S+@\S+\.\S+/g;
+    const punctuationRegex = /[\[\]"“”'()（）<>【】『』「」`~#@^*_|=+\\]/g;
+    const cleanedText = currentText.replace(urlRegex, '').replace(emailRegex, '').replace(punctuationRegex, '');
+
     let words;
-    if (state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)) {
-        words = currentText.replace(/\s+/g, "").split("");
+    if (state.currentLanguage === 'ja') {
+        try {
+            const tokenizer = await getTokenizer();
+            words = tokenizer.tokenize(cleanedText).map(token => token.surface_form);
+        } catch (error) {
+            // Fallback to character splitting on error
+            words = cleanedText.replace(/\s+/g, "").split("");
+        }
+    } else if (state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)) {
+        words = cleanedText.replace(/\s+/g, "").split("");
     } else {
-        words = currentText
+        words = cleanedText
             .trim()
             .split(/\s+/)
             .filter((word) => word.length > 0);
@@ -88,14 +145,14 @@ export function updateTextStats() {
                     ? getTranslation("charsLabel")
                     : getTranslation("wordsLabel"),
                 current: state.currentIndex,
-                total: state.words.length, // Total is now the number of chunks
+                total: state.words.length,
             },
         );
     }
     updateProgressBar();
 }
 
-export function handleTextChange(newTextSourceOrEvent) {
+export async function handleTextChange(newTextSourceOrEvent) {
     if (typeof newTextSourceOrEvent === "string") {
         dom.textInput.value = newTextSourceOrEvent;
     }
@@ -108,7 +165,7 @@ export function handleTextChange(newTextSourceOrEvent) {
     }
     state.currentIndex = 0;
 
-    updateTextStats();
+    await updateTextStats();
 
     updateButtonStates(currentText.trim().length > 0 ? "initial" : "empty");
 

@@ -255,6 +255,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="flex items-center">
+                            <label for="reading-mode-selector" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mr-2" data-lang-key="readingModeLabel"></label>
+                            <div class="relative">
+                                <select id="reading-mode-selector" class="appearance-none text-xs sm:text-sm p-2 pr-8 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 cursor-pointer" tabindex="7">
+                                    <option value="flash" data-lang-key="readingModeFlash"></option>
+                                    <option value="teleprompter" data-lang-key="readingModeTeleprompter"></option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700 dark:text-slate-300">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                </div>
+                            </div>
+                        </div>
                         <label
                             for="fixation-toggle"
                             class="flex items-center cursor-pointer"
@@ -474,6 +486,7 @@
             </p>
         </footer>
 
+        <script src="https://cdn.jsdelivr.net/npm/kuromoji/build/kuromoji.js"></script>
         <script src="translations.js"></script>
         <script type="module" src="main.js"></script>
     </body>

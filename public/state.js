@@ -28,4 +28,5 @@ export const state = {
     originalPlaceholderText: "",
     encoder: new TextEncoder(),
     chunkSize: 1,
+    readingMode: 'flash', // 'flash' or 'teleprompter'
 };

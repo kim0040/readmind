@@ -344,6 +344,30 @@ select.appearance-none {
     transform: translateY(0);
 }
 
+/* Teleprompter Mode Styles */
+.teleprompter-active {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    justify-content: flex-start !important; /* Align text to the left */
+    font-size: 2rem !important; /* Adjust font size for teleprompter readability */
+}
+
+#teleprompter-scroller {
+    display: inline-block;
+    padding-left: 100%; /* Start off-screen to the right */
+    animation-play-state: paused; /* Initially paused */
+    will-change: transform; /* Performance optimization */
+}
+
+@keyframes scroll-left {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
 /* Drag and Drop Styles */
 .drag-over #drag-drop-overlay {
     display: flex;

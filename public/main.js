@@ -19,6 +19,7 @@ function getCurrentSettings() {
         isFixationPointEnabled: state.isFixationPointEnabled,
         wpm: state.currentWpm,
         chunkSize: state.chunkSize,
+        readingMode: state.readingMode,
         text: dom.textInput ? dom.textInput.value : '',
         // Note: We don't save the reading index (currentIndex) to the server.
         // This remains a client-side convenience.
@@ -51,6 +52,9 @@ function applySettings(settings) {
 
     state.chunkSize = parseInt(settings.chunkSize || "1", 10);
     if (dom.chunkSizeSelector) dom.chunkSizeSelector.value = state.chunkSize;
+
+    state.readingMode = settings.readingMode || 'flash';
+    if (dom.readingModeSelector) dom.readingModeSelector.value = state.readingMode;
 
     // Text
     if (settings.text && dom.textInput) {
@@ -98,6 +102,18 @@ async function loadAndApplySettings() {
         settings = localSettings ? JSON.parse(localSettings) : {};
     }
     applySettings(settings);
+}
+
+/**
+ * To be called after a successful login/signup.
+ * Fetches user settings and updates the entire UI accordingly.
+ */
+export async function handleSuccessfulLogin() {
+    updateAuthUI();
+    await loadAndApplySettings();
+    // After settings are loaded, some parts of the UI need to be re-translated and recalculated
+    setLanguage(state.currentLanguage, true);
+    updateTextStats();
 }
 
 

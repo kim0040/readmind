@@ -76,6 +76,7 @@ The backend uses JWT for secure user sessions. You **must** create a secret key 
     echo "JWT_SECRET=$(openssl rand -hex 32)" > .env
     ```
     *   **What this does**: `openssl rand -hex 32` generates a cryptographically secure 64-character random string. `echo "JWT_SECRET=..." > .env` writes this key into a new file named `.env`.
+    *   **A Note on Password Security**: You do not need to configure a salt for password hashing. The `bcryptjs` library we use automatically generates a unique salt for each user and stores it as part of the hash, which is a modern security best practice.
 
 3.  **Return to the Project Root**:
     ```bash
@@ -171,6 +172,35 @@ To ensure the backend server runs continuously (even if you close your terminal 
 ### Step 5: You're Live!
 
 Congratulations! Your ReadMind instance is now fully deployed. Open your web browser and navigate to `https://your_domain.com` to start using the application.
+
+### (Optional) Server Monitoring
+
+Here are a few useful commands to monitor your new application and server health.
+
+*   **Check Real-Time Resource Usage (`htop`)**:
+    `htop` is a powerful, interactive process viewer. It gives you a real-time look at your server's CPU and memory usage.
+    ```bash
+    # If htop is not installed, you can install it with:
+    # sudo apt update && sudo apt install htop -y
+
+    # Run htop
+    htop
+    ```
+    Press `F10` or `q` to exit.
+
+*   **View Backend Logs (`journalctl`)**:
+    Since the backend is running as a `systemd` service, its logs are managed by `journald`. You can view them easily.
+    ```bash
+    # View the logs for our specific backend service
+    sudo journalctl -u readmind-backend.service
+
+    # To follow the logs in real-time (like `tail -f`)
+    sudo journalctl -u readmind-backend.service -f
+
+    # To see the last 100 lines of logs
+    sudo journalctl -u readmind-backend.service -n 100
+    ```
+    Press `Ctrl+C` to stop following the logs.
 
 ---
 

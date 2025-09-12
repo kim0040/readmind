@@ -2,7 +2,7 @@
 
 import * as auth from './auth.js';
 import { state } from "./state.js";
-import { scheduleSave } from "./main.js";
+import { scheduleSave, handleSuccessfulLogin } from "./main.js";
 import { formatWordWithFixation, pauseReading, startReadingFlow } from "./reader.js";
 import { handleTextChange, updateTextStats } from "./text_handler.js";
 
@@ -56,6 +56,7 @@ export const dom = {
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
 
     // New auth elements
+    readingModeSelector: document.getElementById("reading-mode-selector"),
     loginButton: document.getElementById("login-button"),
     logoutButton: document.getElementById("logout-button"),
     authStatus: document.getElementById("auth-status"),
@@ -307,12 +308,19 @@ export function updateButtonStates(buttonState) {
 
 
 export function attachEventListeners() {
+    if (dom.readingModeSelector) {
+        dom.readingModeSelector.addEventListener('change', (e) => {
+            state.readingMode = e.target.value;
+            scheduleSave();
+        });
+    }
+
     if (dom.chunkSizeSelector) {
-        dom.chunkSizeSelector.addEventListener('change', (e) => {
+        dom.chunkSizeSelector.addEventListener('change', async (e) => {
             state.chunkSize = parseInt(e.target.value, 10);
             // Re-process the text with the new chunk size
             if (dom.textInput.value) {
-                handleTextChange(dom.textInput.value);
+                await handleTextChange(dom.textInput.value);
             }
             scheduleSave();
         });
@@ -581,14 +589,11 @@ export function attachEventListeners() {
                     response = await auth.signup(email, password);
                 }
 
-                if (response.token) { // Login successful
-                    showMessage("msgLoginSuccess", "success");
-                    updateAuthUI();
+                if (response.token) { // Login or Signup successful
+                    const message = isLogin ? "msgLoginSuccess" : "msgSignupSuccess";
+                    showMessage(message, "success");
+                    handleSuccessfulLogin();
                     closeAuthModal();
-                    // App initialization logic should handle fetching settings
-                } else if (response.userId) { // Signup successful
-                    showMessage("msgSignupSuccess", "success");
-                    openAuthModal(true); // Switch to login view
                 } else {
                     throw new Error(response.message || 'Authentication failed');
                 }
