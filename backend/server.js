@@ -1,11 +1,13 @@
 // backend/server.js
 require('dotenv').config();
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { setupDatabase, getDb } = require('./database');
 const authMiddleware = require('./middleware/auth');
+const captchaVerification = require('./middleware/captcha_verification');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +15,31 @@ const PORT = process.env.PORT || 3000;
 // --- Middleware ---
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Middleware to parse JSON bodies
+
+// --- Security Middleware ---
+
+// General API rate limiter
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+});
+
+// Stricter rate limiter for authentication routes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 auth-related requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many login or signup attempts from this IP, please try again after 15 minutes',
+});
+
+app.use('/api/', apiLimiter);
+app.use('/api/signup', authLimiter);
+app.use('/api/login', authLimiter);
+
 
 // --- API Routes ---
 
@@ -22,7 +49,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Signup endpoint
-app.post('/api/signup', async (req, res) => {
+app.post('/api/signup', captchaVerification, async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -67,7 +94,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // Login endpoint
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', captchaVerification, async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {

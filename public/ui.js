@@ -598,6 +598,12 @@ export function attachEventListeners() {
             const email = dom.emailInput.value;
             const password = dom.passwordInput.value;
             const isLogin = dom.authModal.dataset.mode === 'login';
+            const captchaToken = grecaptcha.getResponse();
+
+            if (!captchaToken) {
+                showMessage('msgCaptchaRequired', 'error');
+                return;
+            }
 
             try {
                 dom.authSubmitButton.disabled = true;
@@ -605,10 +611,12 @@ export function attachEventListeners() {
 
                 let response;
                 if (isLogin) {
-                    response = await auth.login(email, password);
+                    response = await auth.login(email, password, captchaToken);
                 } else {
-                    response = await auth.signup(email, password);
+                    response = await auth.signup(email, password, captchaToken);
                 }
+
+                grecaptcha.reset(); // Reset captcha after use
 
                 if (response.token) { // Login or Signup successful
                     const message = isLogin ? "msgLoginSuccess" : "msgSignupSuccess";

@@ -64,7 +64,7 @@ First, connect to your server via SSH. Then, follow these steps.
 
 ### Step 2: Backend Configuration (Crucial for Security)
 
-The backend uses JWT for secure user sessions. You **must** create a secret key for this to work.
+The backend uses JWT for secure user sessions and Google reCAPTCHA to prevent bots. You **must** configure secret keys for these to work.
 
 1.  **Navigate to the Backend Directory**:
     ```bash
@@ -78,7 +78,24 @@ The backend uses JWT for secure user sessions. You **must** create a secret key 
     *   **What this does**: `openssl rand -hex 32` generates a cryptographically secure 64-character random string. `echo "JWT_SECRET=..." > .env` writes this key into a new file named `.env`.
     *   **A Note on Password Security**: You do not need to configure a salt for password hashing. The `bcryptjs` library we use automatically generates a unique salt for each user and stores it as part of the hash, which is a modern security best practice.
 
-3.  **Return to the Project Root**:
+2.  **Configure Google reCAPTCHA Keys**:
+    To prevent bots, this application uses Google reCAPTCHA v2. You need to get your own API keys.
+    *   Go to the [reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin/) and create a new site.
+    *   Choose **reCAPTCHA v2** and then the **"I'm not a robot" Checkbox** option.
+    *   Add your domain name where you will host the application.
+    *   After creation, you will get a **Site Key** and a **Secret Key**.
+
+3.  **Set the Environment Variables**:
+    Open the `backend/.env` file you created earlier (`nano backend/.env`). Add your reCAPTCHA keys to it:
+    ```
+    RECAPTCHA_SECRET_KEY="YOUR_SECRET_KEY_HERE"
+    ```
+    Now, open the main frontend file `public/index.html` (`nano public/index.html`) and find the line with `g-recaptcha`. Replace the placeholder with your **Site Key**:
+    ```html
+    <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+    ```
+
+4.  **Return to the Project Root**:
     ```bash
     cd ..
     ```
@@ -204,18 +221,38 @@ Here are a few useful commands to monitor your new application and server health
 
 ---
 
-## (Optional) Traffic Limiter Setup
+## (Optional) Advanced: Automatic Traffic Limiter
 
-The `traffic-limiter.sh` script can help prevent excessive bandwidth usage by shutting down the web server if a monthly traffic limit is exceeded.
+For servers with a limited monthly data plan, this script provides a safety net to prevent unexpected overage charges. It automatically shuts down the web server (Caddy) if your server's total network traffic exceeds a limit you define.
 
-1.  **Configure and Enable**:
+**How it Works:**
+The script uses two core Linux utilities:
+*   `vnstat`: A network traffic monitor that keeps a log of how much data has been transferred. The `setup.sh` script now installs this for you.
+*   `iptables`: The standard Linux firewall. The script doesn't actually use this, it directly stops the `caddy` service. (Correction: The original description was slightly misleading, the script stops the service directly which is cleaner).
+
+### Setup Instructions
+
+1.  **Initialize `vnstat` Database (First Time Only)**:
+    After installation, `vnstat` may need a moment to start monitoring your network interface. Run the following command to check its status.
+    ```bash
+    vnstat
+    # If you see an error like "Error: Unable to read database", wait a few minutes
+    # and try again. vnstat needs to collect some data first.
+    ```
+
+2.  **Configure the Script**:
+    You need to tell the script which network interface to monitor and what your monthly limit is.
     ```bash
     # Make the script executable
     chmod +x traffic-limiter.sh
-    ```
-    Open the script (`nano traffic-limiter.sh`) and adjust the `LIMIT_GB` and `INTERFACE` variables at the top to match your needs.
 
-2.  **Schedule with Cron**: To run the check automatically, add it to your crontab.
+    # Open the script in an editor
+    nano traffic-limiter.sh
+    ```
+    *   Change the `LIMIT_GB` variable to your monthly data limit in Gigabytes.
+    *   Change the `INTERFACE` variable to match your server's main network interface (e.g., `eth0` or `ens5`). You can find this by running the `ip a` command.
+
+3.  **Schedule with Cron**: To run the check automatically, add it to your system's scheduler.
     ```bash
     # Open the cron editor
     crontab -e
