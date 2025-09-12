@@ -2,6 +2,7 @@
 
 import { dom, getTranslation, updateButtonStates } from "./ui.js";
 import { state } from "./state.js";
+import { scheduleSave } from "./main.js";
 import { formatWordWithFixation, updateProgressBar } from "./reader.js";
 
 export function updateTextStats() {
@@ -117,7 +118,7 @@ export function handleTextChange(newTextSourceOrEvent) {
         );
     }
 
-    localStorage.setItem(state.LS_KEYS.TEXT, currentText);
+    scheduleSave();
     localStorage.setItem(state.LS_KEYS.INDEX, "0");
 
     if (currentText.trim() && dom.textInput.placeholder !== "") {

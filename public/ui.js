@@ -1,6 +1,8 @@
 // ui.js - UI logic, DOM manipulation, and event listeners.
 
+import * as auth from './auth.js';
 import { state } from "./state.js";
+import { scheduleSave } from "./main.js";
 import { formatWordWithFixation, pauseReading, startReadingFlow } from "./reader.js";
 import { handleTextChange, updateTextStats } from "./text_handler.js";
 
@@ -40,7 +42,6 @@ export const dom = {
     clearTextButton: document.getElementById("clear-text-button"),
 
     // Auth Modal Elements
-    authButton: document.getElementById("auth-button"),
     authModalOverlay: document.getElementById("auth-modal-overlay"),
     authModal: document.getElementById("auth-modal"),
     closeAuthModalButton: document.getElementById("close-auth-modal"),
@@ -53,13 +54,33 @@ export const dom = {
     passwordInput: document.getElementById("password"),
     dragDropOverlay: document.getElementById("drag-drop-overlay"),
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
+
+    // New auth elements
+    loginButton: document.getElementById("login-button"),
+    logoutButton: document.getElementById("logout-button"),
+    authStatus: document.getElementById("auth-status"),
 };
 
-let isLoginMode = true;
-
-function openAuthModal() {
+function openAuthModal(isLogin = true) {
     if (!dom.authModalOverlay) return;
-    setupAuthModal(true);
+    dom.authModal.dataset.mode = isLogin ? 'login' : 'signup';
+    dom.authForm.reset();
+
+    if (isLogin) {
+        dom.authModalTitle.dataset.langKey = "loginTitle";
+        dom.authSubmitButton.dataset.langKey = "loginButton";
+        dom.authSwitchText.dataset.langKey = "signupPrompt";
+        dom.authSwitchButton.dataset.langKey = "signupLink";
+    } else {
+        dom.authModalTitle.dataset.langKey = "signupTitle";
+        dom.authSubmitButton.dataset.langKey = "signupButton"; // Note: Changed from signupLink for clarity
+        dom.authSwitchText.dataset.langKey = "loginPrompt";
+        dom.authSwitchButton.dataset.langKey = "loginLink";
+    }
+
+    // Re-translate the modal content
+    setLanguage(state.currentLanguage, true); // Force re-translation of modal
+
     dom.authModalOverlay.classList.remove('hidden');
     dom.authModalOverlay.style.display = 'flex';
     setTimeout(() => {
@@ -76,40 +97,24 @@ function closeAuthModal() {
     }, 300);
 }
 
-function setupAuthModal(isLogin) {
-    isLoginMode = isLogin;
-    dom.authForm.reset();
-    if (isLogin) {
-        dom.authModalTitle.dataset.langKey = "loginTitle";
-        dom.authSubmitButton.dataset.langKey = "loginButton";
-        dom.authSwitchText.dataset.langKey = "signupPrompt";
-        dom.authSwitchButton.dataset.langKey = "signupLink";
+export function updateAuthUI() {
+    const isLoggedIn = auth.isLoggedIn();
+    if (isLoggedIn) {
+        const user = auth.getCurrentUser();
+        if (dom.authStatus) {
+            dom.authStatus.textContent = user.email;
+            dom.authStatus.classList.remove('hidden');
+        }
+        if (dom.loginButton) dom.loginButton.classList.add('hidden');
+        if (dom.logoutButton) dom.logoutButton.classList.remove('hidden');
     } else {
-        dom.authModalTitle.dataset.langKey = "signupTitle";
-        dom.authSubmitButton.dataset.langKey = "signupLink";
-        dom.authSwitchText.dataset.langKey = "loginPrompt";
-        dom.authSwitchButton.dataset.langKey = "loginLink";
+        if (dom.authStatus) {
+            dom.authStatus.textContent = '';
+            dom.authStatus.classList.add('hidden');
+        }
+        if (dom.loginButton) dom.loginButton.classList.remove('hidden');
+        if (dom.logoutButton) dom.logoutButton.classList.add('hidden');
     }
-    // Re-translate the modal content
-    dom.authModalTitle.textContent = getTranslation(dom.authModalTitle.dataset.langKey);
-    dom.authSubmitButton.textContent = getTranslation(dom.authSubmitButton.dataset.langKey);
-    dom.authSwitchText.textContent = getTranslation(dom.authSwitchText.dataset.langKey);
-    dom.authSwitchButton.textContent = getTranslation(dom.authSwitchButton.dataset.langKey);
-}
-
-function updateAuthUI(user) {
-    if (user) {
-        dom.authButton.textContent = getTranslation("logoutButton");
-        dom.authButton.dataset.isLoggedIn = "true";
-    } else {
-        dom.authButton.textContent = getTranslation("loginButton");
-        dom.authButton.dataset.isLoggedIn = "false";
-    }
-}
-
-function checkLoginState() {
-    const user = JSON.parse(localStorage.getItem('readMindUser'));
-    updateAuthUI(user);
 }
 
 // ... (rest of the functions like getTranslation, applyTheme, etc. are the same)
@@ -228,7 +233,7 @@ export function setLanguage(lang, isInitializing = false) {
             ` <span id="wpm-value" class="font-semibold text-sky-500 dark:text-sky-400">${state.currentWpm}</span>`;
     }
      // Update auth button text on language change
-    checkLoginState();
+    updateAuthUI();
 }
 
 export function showMessage(messageKey, type = "info", duration = 3000, interpolateParams = null) {
@@ -309,6 +314,7 @@ export function attachEventListeners() {
             if (dom.textInput.value) {
                 handleTextChange(dom.textInput.value);
             }
+            scheduleSave();
         });
     }
 
@@ -434,7 +440,7 @@ export function attachEventListeners() {
             if (wpmValueSpan) wpmValueSpan.textContent = state.currentWpm;
             if (dom.statsWpmValueDisplay) dom.statsWpmValueDisplay.textContent = state.currentWpm;
             updateTextStats();
-            localStorage.setItem(state.LS_KEYS.WPM, state.currentWpm.toString());
+            scheduleSave();
 
             if (state.intervalId && !state.isPaused) {
                 clearInterval(state.intervalId);
@@ -470,10 +476,9 @@ export function attachEventListeners() {
     if (dom.darkModeToggle) {
         dom.darkModeToggle.addEventListener("click", () => {
             const isDark = document.documentElement.classList.toggle("dark");
-            localStorage.setItem(state.LS_KEYS.THEME, isDark ? "dark" : "light");
             state.userHasManuallySetTheme = true;
-            localStorage.setItem(state.LS_KEYS.USER_THEME_PREFERENCE, "true");
             applyTheme(isDark);
+            scheduleSave();
         });
     }
 
@@ -487,7 +492,7 @@ export function attachEventListeners() {
     if (dom.fixationToggle) {
         dom.fixationToggle.addEventListener("change", () => {
             state.isFixationPointEnabled = dom.fixationToggle.checked;
-            localStorage.setItem(state.LS_KEYS.FIXATION_ENABLED, state.isFixationPointEnabled.toString());
+            scheduleSave();
             if (dom.currentWordDisplay && dom.currentWordDisplay.textContent !== getTranslation("statusReady") && dom.currentWordDisplay.textContent !== getTranslation("statusComplete") && state.words[state.currentIndex - 1]) {
                 dom.currentWordDisplay.innerHTML = formatWordWithFixation(state.words[state.currentIndex - 1]);
             } else if (dom.currentWordDisplay && dom.currentWordDisplay.textContent) {
@@ -525,16 +530,17 @@ export function attachEventListeners() {
     }
 
     // --- Auth modal event listeners ---
-    if (dom.authButton) {
-        dom.authButton.addEventListener("click", () => {
-            const isLoggedIn = dom.authButton.dataset.isLoggedIn === "true";
-            if (isLoggedIn) {
-                localStorage.removeItem('readMindUser');
-                updateAuthUI(null);
-                showMessage("msgLogoutSuccess", "success");
-            } else {
-                openAuthModal();
-            }
+    if (dom.loginButton) {
+        dom.loginButton.addEventListener("click", () => openAuthModal(true));
+    }
+
+    if (dom.logoutButton) {
+        dom.logoutButton.addEventListener("click", () => {
+            auth.logout();
+            updateAuthUI();
+            showMessage("msgLogoutSuccess", "success");
+            // Potentially reload settings for guest user
+            // This will be handled in the main state management logic
         });
     }
 
@@ -552,7 +558,8 @@ export function attachEventListeners() {
 
     if (dom.authSwitchButton) {
         dom.authSwitchButton.addEventListener("click", () => {
-            setupAuthModal(!isLoginMode);
+            const isLogin = dom.authModal.dataset.mode === 'login';
+            openAuthModal(!isLogin);
         });
     }
 
@@ -561,35 +568,37 @@ export function attachEventListeners() {
             event.preventDefault();
             const email = dom.emailInput.value;
             const password = dom.passwordInput.value;
-            const endpoint = isLoginMode ? '/api/login' : '/api/signup';
+            const isLogin = dom.authModal.dataset.mode === 'login';
 
             try {
-                const response = await fetch(`http://localhost:3000${endpoint}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
+                dom.authSubmitButton.disabled = true;
+                dom.authSubmitButton.textContent = getTranslation('loading');
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Authentication failed');
+                let response;
+                if (isLogin) {
+                    response = await auth.login(email, password);
+                } else {
+                    response = await auth.signup(email, password);
                 }
 
-                showMessage(isLoginMode ? "msgLoginSuccess" : "msgSignupSuccess", "success");
-
-                if (data.user) {
-                    localStorage.setItem('readMindUser', JSON.stringify(data.user));
-                    updateAuthUI(data.user);
+                if (response.token) { // Login successful
+                    showMessage("msgLoginSuccess", "success");
+                    updateAuthUI();
+                    closeAuthModal();
+                    // App initialization logic should handle fetching settings
+                } else if (response.userId) { // Signup successful
+                    showMessage("msgSignupSuccess", "success");
+                    openAuthModal(true); // Switch to login view
+                } else {
+                    throw new Error(response.message || 'Authentication failed');
                 }
-
-                closeAuthModal();
 
             } catch (error) {
                 console.error("Authentication error:", error.message);
-                showMessage("msgAuthError", "error");
+                showMessage(error.message, "error"); // Show specific error from backend
+            } finally {
+                dom.authSubmitButton.disabled = false;
+                // Text will be reset by the next openAuthModal or by updateAuthUI
             }
         });
     }
