@@ -2,6 +2,7 @@
 
 import { dom, getTranslation, showMessage, updateButtonStates } from "./ui.js";
 import { state } from "./state.js";
+import { scheduleSave } from "./main.js";
 
 const START_DELAY = 1000;
 const ANIMATION_DURATION_NORMAL = 120;
@@ -29,7 +30,6 @@ function displayNextWord() {
     if (state.currentIndex < state.words.length) {
         if (dom.currentWordDisplay) {
             let currentChunk = state.words[state.currentIndex];
-            // If chunking is active, currentChunk will be an array. Join it.
             const wordToShow = Array.isArray(currentChunk) ? currentChunk.join(' ') : currentChunk;
 
             dom.currentWordDisplay.innerHTML = formatWordWithFixation(wordToShow);
@@ -53,7 +53,7 @@ function displayNextWord() {
         }
         state.currentIndex++;
         if (dom.progressInfoDisplay) {
-            let unitLabel;
+             let unitLabel;
             if (state.NO_SPACE_LANGUAGES.includes(state.currentLanguage)) {
                 unitLabel = getTranslation("charsLabel");
             } else if (state.chunkSize > 1) {
@@ -61,22 +61,42 @@ function displayNextWord() {
             } else {
                 unitLabel = getTranslation("wordsLabel");
             }
-
-            dom.progressInfoDisplay.textContent = getTranslation(
-                "progressLabelFormat",
-                state.currentLanguage,
-                "en",
-                {
-                    unit: unitLabel,
-                    current: state.currentIndex,
-                    total: state.words.length,
-                },
-            );
+            dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", state.currentLanguage, "en", { unit: unitLabel, current: state.currentIndex, total: state.words.length });
         }
         updateProgressBar();
     } else {
         completeReadingSession();
     }
+}
+
+function startTeleprompter() {
+    const displayArea = dom.currentWordDisplay;
+    if (!displayArea) return;
+
+    // Prepare UI
+    displayArea.innerHTML = ''; // Clear previous content
+    displayArea.classList.add('teleprompter-active');
+
+    const scroller = document.createElement('span');
+    scroller.id = 'teleprompter-scroller';
+    scroller.textContent = state.words.join(state.NO_SPACE_LANGUAGES.includes(state.currentLanguage) ? '' : ' ');
+    displayArea.appendChild(scroller);
+
+    // Calculate duration
+    const totalChars = scroller.textContent.length;
+    const avgCharsPerWord = 5; // A common baseline
+    const wpm = state.currentWpm;
+    const charsPerMinute = wpm * avgCharsPerWord;
+    const charsPerSecond = charsPerMinute / 60;
+    const duration = totalChars / charsPerSecond;
+
+    scroller.style.animation = `scroll-left ${duration}s linear`;
+    scroller.style.animationPlayState = 'running';
+
+    // Handle completion
+    scroller.addEventListener('animationend', () => {
+        completeReadingSession();
+    }, { once: true });
 }
 
 export function startReadingFlow(isResuming = false) {
@@ -86,49 +106,83 @@ export function startReadingFlow(isResuming = false) {
     }
     if (!isResuming) {
         state.currentIndex = 0;
-        if (dom.currentWordDisplay)
-            dom.currentWordDisplay.innerHTML = formatWordWithFixation(
-                getTranslation("statusPreparing"),
-            );
     }
+
+    // Handle teleprompter resume
+    if (isResuming && state.readingMode === 'teleprompter') {
+        resumeTeleprompter();
+        return;
+    }
+
+    if (dom.currentWordDisplay) {
+        dom.currentWordDisplay.innerHTML = formatWordWithFixation(getTranslation("statusPreparing"));
+    }
+
     state.isPaused = false;
     updateButtonStates("reading");
 
     clearTimeout(state.startDelayTimeoutId);
-    state.startDelayTimeoutId = setTimeout(
-        () => {
+    state.startDelayTimeoutId = setTimeout(() => {
+        if (state.readingMode === 'teleprompter') {
+            startTeleprompter();
+        } else { // 'flash' mode
             if (state.intervalId) clearInterval(state.intervalId);
             displayNextWord();
             if (state.currentIndex < state.words.length) {
                 state.intervalId = setInterval(displayNextWord, 60000 / state.currentWpm);
             }
-        },
-        isResuming ? 0 : START_DELAY,
-    );
+        }
+    }, isResuming ? 0 : START_DELAY);
 }
 
 function completeReadingSession() {
-    clearInterval(state.intervalId);
-    state.intervalId = null;
-    if (dom.currentWordDisplay)
-        dom.currentWordDisplay.innerHTML = formatWordWithFixation(
-            getTranslation("statusComplete"),
-        );
+    if (state.readingMode === 'teleprompter') {
+        const displayArea = dom.currentWordDisplay;
+        if (displayArea) {
+            displayArea.classList.remove('teleprompter-active');
+            const scroller = document.getElementById('teleprompter-scroller');
+            if (scroller) scroller.remove();
+        }
+    } else {
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+    }
+
+    if (dom.currentWordDisplay) {
+        dom.currentWordDisplay.innerHTML = formatWordWithFixation(getTranslation("statusComplete"));
+    }
+
     showMessage("msgAllWordsRead", "success", 3000);
     updateButtonStates("completed");
-    localStorage.setItem(state.LS_KEYS.TEXT, dom.textInput.value);
-    localStorage.setItem(state.LS_KEYS.INDEX, state.currentIndex.toString());
+    scheduleSave();
+    localStorage.setItem(state.LS_KEYS.INDEX, "0"); // Reset index after completion
 }
 
 export function pauseReading() {
-    clearInterval(state.intervalId);
-    state.intervalId = null;
+    if (state.readingMode === 'teleprompter') {
+        const scroller = document.getElementById('teleprompter-scroller');
+        if (scroller) {
+            scroller.style.animationPlayState = 'paused';
+        }
+    } else {
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+    }
+
     state.isPaused = true;
-    if (dom.currentWordDisplay)
-        dom.currentWordDisplay.innerHTML = formatWordWithFixation(
-            getTranslation("statusPaused"),
-        );
+    if (dom.currentWordDisplay && state.readingMode === 'flash') {
+        dom.currentWordDisplay.innerHTML = formatWordWithFixation(getTranslation("statusPaused"));
+    }
     updateButtonStates("paused");
-    localStorage.setItem(state.LS_KEYS.TEXT, dom.textInput.value);
+    scheduleSave();
     localStorage.setItem(state.LS_KEYS.INDEX, state.currentIndex.toString());
+}
+
+function resumeTeleprompter() {
+    const scroller = document.getElementById('teleprompter-scroller');
+    if (scroller) {
+        scroller.style.animationPlayState = 'running';
+        state.isPaused = false;
+        updateButtonStates("reading");
+    }
 }

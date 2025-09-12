@@ -1,11 +1,6 @@
 /* style.css */
-/* 기존 CSS 내용과 동일합니다. 요청하신 기능 변경에 CSS 수정은 필요하지 않았습니다. */
-/* Placeholder 숨김 처리는 이미 :focus::placeholder { color: transparent !important; } 로 스타일링 되어 있으며,
-   JavaScript에서 focus, blur, input 이벤트를 통해 placeholder 속성 값을 직접 제어하여
-   클릭/입력 시 사라지고, 내용 없을 시 다시 나타나도록 구현했습니다. */
 
 body {
-    font-family: "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition:
@@ -342,6 +337,75 @@ select.appearance-none {
 #auth-modal-overlay.show #auth-modal {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* --- Polish & Animations --- */
+.document-item {
+    transition: background-color 0.2s ease-in-out;
+}
+
+@media (min-width: 768px) {
+    #document-sidebar {
+        animation: slide-in 0.5s ease-out;
+    }
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+
+/* --- SimpleMDE Dark Theme Overrides --- */
+.dark .editor-toolbar {
+    background-color: #374151; /* slate-700 */
+    border-color: #4b5563; /* slate-600 */
+}
+.dark .editor-toolbar a {
+    color: #d1d5db !important; /* slate-300 */
+}
+.dark .editor-toolbar a:hover, .dark .editor-toolbar a.active {
+    background-color: #4b5563; /* slate-600 */
+    border-color: #4b5563;
+}
+.dark .CodeMirror {
+    background-color: #1f2937; /* slate-800 */
+    color: #d1d5db; /* slate-300 */
+    border-color: #4b5563 !important;
+}
+.dark .CodeMirror-cursor {
+    border-left-color: #f3f4f6 !important; /* slate-100 */
+}
+.dark .editor-preview, .dark .editor-preview-side {
+    background-color: #111827; /* gray-900 */
+}
+
+/* Teleprompter Mode Styles */
+.teleprompter-active {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    justify-content: flex-start !important; /* Align text to the left */
+    font-size: 2rem !important; /* Adjust font size for teleprompter readability */
+}
+
+#teleprompter-scroller {
+    display: inline-block;
+    padding-left: 100%; /* Start off-screen to the right */
+    animation-play-state: paused; /* Initially paused */
+    will-change: transform; /* Performance optimization */
+}
+
+@keyframes scroll-left {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
 }
 
 /* Drag and Drop Styles */

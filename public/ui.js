@@ -1,11 +1,14 @@
 // ui.js - UI logic, DOM manipulation, and event listeners.
 
+import * as auth from './auth.js';
 import { state } from "./state.js";
+import { scheduleSave, handleSuccessfulLogin, handleLogout } from "./main.js";
 import { formatWordWithFixation, pauseReading, startReadingFlow } from "./reader.js";
 import { handleTextChange, updateTextStats } from "./text_handler.js";
 
 export const dom = {
     // Existing DOM elements
+    mainCard: document.querySelector(".main-card"),
     textInput: document.getElementById("text-input"),
     fileInput: document.getElementById("file-input"),
     wpmInput: document.getElementById("wpm-input"),
@@ -40,7 +43,6 @@ export const dom = {
     clearTextButton: document.getElementById("clear-text-button"),
 
     // Auth Modal Elements
-    authButton: document.getElementById("auth-button"),
     authModalOverlay: document.getElementById("auth-modal-overlay"),
     authModal: document.getElementById("auth-modal"),
     closeAuthModalButton: document.getElementById("close-auth-modal"),
@@ -53,13 +55,40 @@ export const dom = {
     passwordInput: document.getElementById("password"),
     dragDropOverlay: document.getElementById("drag-drop-overlay"),
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
+
+    // Document management elements
+    documentSidebar: document.getElementById("document-sidebar"),
+    newDocumentButton: document.getElementById("new-document-button"),
+    documentList: document.getElementById("document-list"),
+
+    // New auth elements
+    fullscreenButton: document.getElementById("fullscreen-button"),
+    readingModeSelector: document.getElementById("reading-mode-selector"),
+    loginButton: document.getElementById("login-button"),
+    logoutButton: document.getElementById("logout-button"),
+    authStatus: document.getElementById("auth-status"),
 };
 
-let isLoginMode = true;
-
-function openAuthModal() {
+function openAuthModal(isLogin = true) {
     if (!dom.authModalOverlay) return;
-    setupAuthModal(true);
+    dom.authModal.dataset.mode = isLogin ? 'login' : 'signup';
+    dom.authForm.reset();
+
+    if (isLogin) {
+        dom.authModalTitle.dataset.langKey = "loginTitle";
+        dom.authSubmitButton.dataset.langKey = "loginButton";
+        dom.authSwitchText.dataset.langKey = "signupPrompt";
+        dom.authSwitchButton.dataset.langKey = "signupLink";
+    } else {
+        dom.authModalTitle.dataset.langKey = "signupTitle";
+        dom.authSubmitButton.dataset.langKey = "signupButton"; // Note: Changed from signupLink for clarity
+        dom.authSwitchText.dataset.langKey = "loginPrompt";
+        dom.authSwitchButton.dataset.langKey = "loginLink";
+    }
+
+    // Re-translate the modal content
+    setLanguage(state.currentLanguage, true); // Force re-translation of modal
+
     dom.authModalOverlay.classList.remove('hidden');
     dom.authModalOverlay.style.display = 'flex';
     setTimeout(() => {
@@ -76,40 +105,24 @@ function closeAuthModal() {
     }, 300);
 }
 
-function setupAuthModal(isLogin) {
-    isLoginMode = isLogin;
-    dom.authForm.reset();
-    if (isLogin) {
-        dom.authModalTitle.dataset.langKey = "loginTitle";
-        dom.authSubmitButton.dataset.langKey = "loginButton";
-        dom.authSwitchText.dataset.langKey = "signupPrompt";
-        dom.authSwitchButton.dataset.langKey = "signupLink";
+export function updateAuthUI() {
+    const isLoggedIn = auth.isLoggedIn();
+    if (isLoggedIn) {
+        const user = auth.getCurrentUser();
+        if (dom.authStatus) {
+            dom.authStatus.textContent = user.email;
+            dom.authStatus.classList.remove('hidden');
+        }
+        if (dom.loginButton) dom.loginButton.classList.add('hidden');
+        if (dom.logoutButton) dom.logoutButton.classList.remove('hidden');
     } else {
-        dom.authModalTitle.dataset.langKey = "signupTitle";
-        dom.authSubmitButton.dataset.langKey = "signupLink";
-        dom.authSwitchText.dataset.langKey = "loginPrompt";
-        dom.authSwitchButton.dataset.langKey = "loginLink";
+        if (dom.authStatus) {
+            dom.authStatus.textContent = '';
+            dom.authStatus.classList.add('hidden');
+        }
+        if (dom.loginButton) dom.loginButton.classList.remove('hidden');
+        if (dom.logoutButton) dom.logoutButton.classList.add('hidden');
     }
-    // Re-translate the modal content
-    dom.authModalTitle.textContent = getTranslation(dom.authModalTitle.dataset.langKey);
-    dom.authSubmitButton.textContent = getTranslation(dom.authSubmitButton.dataset.langKey);
-    dom.authSwitchText.textContent = getTranslation(dom.authSwitchText.dataset.langKey);
-    dom.authSwitchButton.textContent = getTranslation(dom.authSwitchButton.dataset.langKey);
-}
-
-function updateAuthUI(user) {
-    if (user) {
-        dom.authButton.textContent = getTranslation("logoutButton");
-        dom.authButton.dataset.isLoggedIn = "true";
-    } else {
-        dom.authButton.textContent = getTranslation("loginButton");
-        dom.authButton.dataset.isLoggedIn = "false";
-    }
-}
-
-function checkLoginState() {
-    const user = JSON.parse(localStorage.getItem('readMindUser'));
-    updateAuthUI(user);
 }
 
 // ... (rest of the functions like getTranslation, applyTheme, etc. are the same)
@@ -228,7 +241,7 @@ export function setLanguage(lang, isInitializing = false) {
             ` <span id="wpm-value" class="font-semibold text-sky-500 dark:text-sky-400">${state.currentWpm}</span>`;
     }
      // Update auth button text on language change
-    checkLoginState();
+    updateAuthUI();
 }
 
 export function showMessage(messageKey, type = "info", duration = 3000, interpolateParams = null) {
@@ -301,14 +314,36 @@ export function updateButtonStates(buttonState) {
 }
 
 
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        dom.mainCard?.requestFullscreen().catch(err => {
+            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
 export function attachEventListeners() {
+    if (dom.fullscreenButton) {
+        dom.fullscreenButton.addEventListener('click', toggleFullscreen);
+    }
+
+    if (dom.readingModeSelector) {
+        dom.readingModeSelector.addEventListener('change', (e) => {
+            state.readingMode = e.target.value;
+            scheduleSave();
+        });
+    }
+
     if (dom.chunkSizeSelector) {
-        dom.chunkSizeSelector.addEventListener('change', (e) => {
+        dom.chunkSizeSelector.addEventListener('change', async (e) => {
             state.chunkSize = parseInt(e.target.value, 10);
             // Re-process the text with the new chunk size
             if (dom.textInput.value) {
-                handleTextChange(dom.textInput.value);
+                await handleTextChange(dom.textInput.value);
             }
+            scheduleSave();
         });
     }
 
@@ -434,7 +469,7 @@ export function attachEventListeners() {
             if (wpmValueSpan) wpmValueSpan.textContent = state.currentWpm;
             if (dom.statsWpmValueDisplay) dom.statsWpmValueDisplay.textContent = state.currentWpm;
             updateTextStats();
-            localStorage.setItem(state.LS_KEYS.WPM, state.currentWpm.toString());
+            scheduleSave();
 
             if (state.intervalId && !state.isPaused) {
                 clearInterval(state.intervalId);
@@ -470,10 +505,9 @@ export function attachEventListeners() {
     if (dom.darkModeToggle) {
         dom.darkModeToggle.addEventListener("click", () => {
             const isDark = document.documentElement.classList.toggle("dark");
-            localStorage.setItem(state.LS_KEYS.THEME, isDark ? "dark" : "light");
             state.userHasManuallySetTheme = true;
-            localStorage.setItem(state.LS_KEYS.USER_THEME_PREFERENCE, "true");
             applyTheme(isDark);
+            scheduleSave();
         });
     }
 
@@ -487,7 +521,7 @@ export function attachEventListeners() {
     if (dom.fixationToggle) {
         dom.fixationToggle.addEventListener("change", () => {
             state.isFixationPointEnabled = dom.fixationToggle.checked;
-            localStorage.setItem(state.LS_KEYS.FIXATION_ENABLED, state.isFixationPointEnabled.toString());
+            scheduleSave();
             if (dom.currentWordDisplay && dom.currentWordDisplay.textContent !== getTranslation("statusReady") && dom.currentWordDisplay.textContent !== getTranslation("statusComplete") && state.words[state.currentIndex - 1]) {
                 dom.currentWordDisplay.innerHTML = formatWordWithFixation(state.words[state.currentIndex - 1]);
             } else if (dom.currentWordDisplay && dom.currentWordDisplay.textContent) {
@@ -525,17 +559,12 @@ export function attachEventListeners() {
     }
 
     // --- Auth modal event listeners ---
-    if (dom.authButton) {
-        dom.authButton.addEventListener("click", () => {
-            const isLoggedIn = dom.authButton.dataset.isLoggedIn === "true";
-            if (isLoggedIn) {
-                localStorage.removeItem('readMindUser');
-                updateAuthUI(null);
-                showMessage("msgLogoutSuccess", "success");
-            } else {
-                openAuthModal();
-            }
-        });
+    if (dom.loginButton) {
+        dom.loginButton.addEventListener("click", () => openAuthModal(true));
+    }
+
+    if (dom.logoutButton) {
+        dom.logoutButton.addEventListener("click", handleLogout);
     }
 
     if (dom.closeAuthModalButton) {
@@ -552,7 +581,8 @@ export function attachEventListeners() {
 
     if (dom.authSwitchButton) {
         dom.authSwitchButton.addEventListener("click", () => {
-            setupAuthModal(!isLoginMode);
+            const isLogin = dom.authModal.dataset.mode === 'login';
+            openAuthModal(!isLogin);
         });
     }
 
@@ -561,35 +591,42 @@ export function attachEventListeners() {
             event.preventDefault();
             const email = dom.emailInput.value;
             const password = dom.passwordInput.value;
-            const endpoint = isLoginMode ? '/api/login' : '/api/signup';
+            const isLogin = dom.authModal.dataset.mode === 'login';
+            const captchaToken = grecaptcha.getResponse();
+
+            if (!captchaToken) {
+                showMessage('msgCaptchaRequired', 'error');
+                return;
+            }
 
             try {
-                const response = await fetch(`http://localhost:3000${endpoint}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
+                dom.authSubmitButton.disabled = true;
+                dom.authSubmitButton.textContent = getTranslation('loading');
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Authentication failed');
+                let response;
+                if (isLogin) {
+                    response = await auth.login(email, password, captchaToken);
+                } else {
+                    response = await auth.signup(email, password, captchaToken);
                 }
 
-                showMessage(isLoginMode ? "msgLoginSuccess" : "msgSignupSuccess", "success");
+                grecaptcha.reset(); // Reset captcha after use
 
-                if (data.user) {
-                    localStorage.setItem('readMindUser', JSON.stringify(data.user));
-                    updateAuthUI(data.user);
+                if (response.token) { // Login or Signup successful
+                    const message = isLogin ? "msgLoginSuccess" : "msgSignupSuccess";
+                    showMessage(message, "success");
+                    handleSuccessfulLogin();
+                    closeAuthModal();
+                } else {
+                    throw new Error(response.message || 'Authentication failed');
                 }
-
-                closeAuthModal();
 
             } catch (error) {
                 console.error("Authentication error:", error.message);
-                showMessage("msgAuthError", "error");
+                showMessage(error.message, "error"); // Show specific error from backend
+            } finally {
+                dom.authSubmitButton.disabled = false;
+                // Text will be reset by the next openAuthModal or by updateAuthUI
             }
         });
     }

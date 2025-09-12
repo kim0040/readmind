@@ -5,9 +5,9 @@
 
 set -e # Exit immediately if a command exits with a non-zero status.
 
-echo "--- [Step 1/5] Updating package list and installing prerequisites ---"
+# Update package list and install Caddy, Node.js, npm, and vnstat
 sudo apt-get update
-sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl
+sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https vnstat
 
 echo "--- [Step 2/5] Adding Caddy GPG key and repository ---"
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg

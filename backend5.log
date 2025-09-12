@@ -1,0 +1,4 @@
+[dotenv@17.2.2] injecting env (3) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+Connected to the SQLite database.
+Users and Documents tables are ready.
+Server is running on http://localhost:3000

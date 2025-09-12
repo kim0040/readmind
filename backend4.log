@@ -1,0 +1,4 @@
+[dotenv@17.2.2] injecting env (1) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+Connected to the SQLite database.
+Users and Documents tables are ready.
+Server is running on http://localhost:3000
