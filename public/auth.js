@@ -107,6 +107,83 @@ export async function getSettings() {
     return response.json();
 }
 
+export async function getDocument(id) {
+    const token = getToken();
+    if (!token) return Promise.reject('Not logged in');
+
+    const response = await fetch(`${API_URL}/documents/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+        if (response.status === 401) logout();
+        throw new Error('Could not fetch document');
+    }
+    return response.json();
+}
+
+export async function createDocument(title, content = '') {
+    const token = getToken();
+    if (!token) return Promise.reject('Not logged in');
+
+    const response = await fetch(`${API_URL}/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title, content }),
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Could not create document');
+    }
+    return response.json();
+}
+
+export async function updateDocument(id, title, content) {
+    const token = getToken();
+    if (!token) return Promise.reject('Not logged in');
+
+    const response = await fetch(`${API_URL}/documents/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title, content }),
+    });
+    if (!response.ok) {
+        throw new Error('Could not update document');
+    }
+    return response.json();
+}
+
+export async function deleteDocument(id) {
+    const token = getToken();
+    if (!token) return Promise.reject('Not logged in');
+
+    const response = await fetch(`${API_URL}/documents/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+        throw new Error('Could not delete document');
+    }
+    return response.json();
+}
+
+/**
+ * Fetches the list of documents for the logged-in user.
+ * @returns {Promise<any>}
+ */
+export async function getDocuments() {
+    const token = getToken();
+    if (!token) return Promise.resolve([]);
+
+    const response = await fetch(`${API_URL}/documents`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+        if (response.status === 401) logout();
+        throw new Error('Could not fetch documents');
+    }
+    return response.json();
+}
+
 /**
  * Saves the user's settings to the server.
  * @param {object} settings

@@ -29,4 +29,6 @@ export const state = {
     encoder: new TextEncoder(),
     chunkSize: 1,
     readingMode: 'flash', // 'flash' or 'teleprompter'
+    simplemde: null, // To hold the SimpleMDE instance
+    activeDocument: null, // To hold the currently active document object
 };

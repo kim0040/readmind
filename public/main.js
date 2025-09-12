@@ -4,6 +4,7 @@ import { state } from './state.js';
 import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage } from './ui.js';
 import { updateTextStats } from './text_handler.js';
 import { formatWordWithFixation, updateProgressBar } from './reader.js';
+import { renderDocumentList, attachDocumentEventListeners } from './document_manager.js';
 
 // --- Settings Management ---
 
@@ -111,6 +112,7 @@ async function loadAndApplySettings() {
 export async function handleSuccessfulLogin() {
     updateAuthUI();
     await loadAndApplySettings();
+    await renderDocumentList();
     // After settings are loaded, some parts of the UI need to be re-translated and recalculated
     setLanguage(state.currentLanguage, true);
     updateTextStats();
@@ -131,6 +133,32 @@ async function initializeApp() {
 
     updateAuthUI(); // Initial check for logged-in status
     await loadAndApplySettings();
+    await renderDocumentList();
+
+    // --- Initialize Markdown Editor ---
+    if (document.getElementById("text-input")) {
+        state.simplemde = new SimpleMDE({
+            element: document.getElementById("text-input"),
+            spellChecker: false,
+            autosave: {
+                enabled: false, // Use our own save logic
+                uniqueId: "ReadMindContent"
+            },
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
+        });
+
+        state.simplemde.codemirror.on("change", () => {
+            if (dom.textInput) {
+                dom.textInput.value = state.simplemde.value();
+                scheduleSave();
+            }
+        });
+
+        // Set initial value from loaded settings
+        if (dom.textInput.value) {
+            state.simplemde.value(dom.textInput.value);
+        }
+    }
 
     // Now that settings are loaded, finalize UI
     updateTextStats();
@@ -163,6 +191,7 @@ async function initializeApp() {
     updateButtonStates(initialState);
     updateProgressBar();
     attachEventListeners();
+    attachDocumentEventListeners();
 }
 
 // Wait for the DOM to be fully loaded before initializing

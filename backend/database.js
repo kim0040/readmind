@@ -27,7 +27,19 @@ async function setupDatabase() {
             )
         `);
 
-        console.log('Users table is ready.');
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT DEFAULT '',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+        `);
+
+        console.log('Users and Documents tables are ready.');
         return db;
     } catch (err) {
         console.error('Error setting up database:', err.message);

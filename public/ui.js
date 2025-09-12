@@ -8,6 +8,7 @@ import { handleTextChange, updateTextStats } from "./text_handler.js";
 
 export const dom = {
     // Existing DOM elements
+    mainCard: document.querySelector(".main-card"),
     textInput: document.getElementById("text-input"),
     fileInput: document.getElementById("file-input"),
     wpmInput: document.getElementById("wpm-input"),
@@ -55,7 +56,13 @@ export const dom = {
     dragDropOverlay: document.getElementById("drag-drop-overlay"),
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
 
+    // Document management elements
+    documentSidebar: document.getElementById("document-sidebar"),
+    newDocumentButton: document.getElementById("new-document-button"),
+    documentList: document.getElementById("document-list"),
+
     // New auth elements
+    fullscreenButton: document.getElementById("fullscreen-button"),
     readingModeSelector: document.getElementById("reading-mode-selector"),
     loginButton: document.getElementById("login-button"),
     logoutButton: document.getElementById("logout-button"),
@@ -307,7 +314,21 @@ export function updateButtonStates(buttonState) {
 }
 
 
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        dom.mainCard?.requestFullscreen().catch(err => {
+            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
 export function attachEventListeners() {
+    if (dom.fullscreenButton) {
+        dom.fullscreenButton.addEventListener('click', toggleFullscreen);
+    }
+
     if (dom.readingModeSelector) {
         dom.readingModeSelector.addEventListener('change', (e) => {
             state.readingMode = e.target.value;
