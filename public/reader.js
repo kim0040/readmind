@@ -178,6 +178,14 @@ export function pauseReading() {
     localStorage.setItem(LS_KEYS.INDEX, readerState.currentIndex.toString());
 }
 
+export function updateReadingSpeed(newWpm) {
+    readerState.currentWpm = newWpm;
+    if (readerState.intervalId) { // Only if reading is in progress
+        clearInterval(readerState.intervalId);
+        readerState.intervalId = setInterval(displayNextWord, 60000 / newWpm);
+    }
+}
+
 function resumeTeleprompter() {
     const scroller = document.getElementById('teleprompter-scroller');
     if (scroller) {

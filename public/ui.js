@@ -3,7 +3,7 @@
 import * as auth from './auth.js';
 import { appState, readerState, documentState } from "./state.js";
 import { handleSuccessfulLogin, handleLogout, scheduleSave } from "./main.js";
-import { pauseReading, startReadingFlow } from "./reader.js";
+import { pauseReading, startReadingFlow, updateReadingSpeed } from "./reader.js";
 import { updateTextStats, handleTextChange } from "./text_handler.js";
 
 export const dom = {
@@ -186,8 +186,12 @@ export function applyTheme(theme, isDark) {
     // Update icon visibility
     const darkIcon = document.getElementById('theme-toggle-dark-icon');
     const lightIcon = document.getElementById('theme-toggle-light-icon');
-    if (darkIcon) darkIcon.classList.toggle('hidden', !isDark);
-    if (lightIcon) lightIcon.classList.toggle('hidden', isDark);
+    if (darkIcon) {
+        darkIcon.style.display = isDark ? 'inline-flex' : 'none';
+    }
+    if (lightIcon) {
+        lightIcon.style.display = isDark ? 'none' : 'inline-flex';
+    }
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -271,13 +275,10 @@ function setupReaderControls() {
         scheduleSave();
     });
     dom.wpmInput?.addEventListener("input", () => {
-        readerState.currentWpm = parseInt(dom.wpmInput.value, 10);
-        updateTextStats();
-        scheduleSave();
-        if (readerState.intervalId) {
-            clearInterval(readerState.intervalId);
-            readerState.intervalId = setInterval(displayNextWord, 60000 / readerState.currentWpm);
-        }
+        const newWpm = parseInt(dom.wpmInput.value, 10);
+        updateTextStats(); // Update stats display
+        scheduleSave(); // Save the new WPM value
+        updateReadingSpeed(newWpm); // Update the reader speed
     });
     dom.fixationToggle?.addEventListener("change", () => {
         readerState.isFixationPointEnabled = dom.fixationToggle.checked;
