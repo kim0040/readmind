@@ -1,19 +1,16 @@
 // main.js - The entry point of the application.
 import * as auth from './auth.js';
 import { appState, readerState, documentState, LS_KEYS } from './state.js';
-import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage, applyReaderStyles } from './ui.js';
+import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, applyReaderStyles } from './ui.js';
 import { updateTextStats } from './text_handler.js';
-import { formatWordWithFixation, updateProgressBar } from './reader.js';
+import { updateProgressBar } from './reader.js';
 import { renderDocumentList, attachDocumentEventListeners, loadDocument } from './document_manager.js';
-
-// --- Settings Management ---
 
 function getCurrentSettings() {
     return {
         language: appState.currentLanguage,
         colorTheme: document.body.dataset.theme || 'blue',
         darkMode: document.documentElement.classList.contains('dark'),
-        userHasManuallySetTheme: appState.userHasManuallySetTheme,
         isFixationPointEnabled: readerState.isFixationPointEnabled,
         wpm: readerState.currentWpm,
         chunkSize: readerState.chunkSize,
@@ -28,10 +25,10 @@ function applySettings(settings) {
     const lang = settings.language || navigator.language.split("-")[0] || "ko";
     appState.currentLanguage = translations[lang] ? lang : "ko";
 
-    appState.userHasManuallySetTheme = settings.userHasManuallySetTheme || false;
     const isDark = settings.darkMode ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
     const theme = settings.colorTheme || 'blue';
     applyTheme(theme, isDark);
+    if(dom.themeSelector) dom.themeSelector.value = theme;
 
     readerState.isFixationPointEnabled = settings.isFixationPointEnabled || false;
     if (dom.fixationToggle) dom.fixationToggle.checked = readerState.isFixationPointEnabled;
@@ -66,27 +63,28 @@ export function scheduleSave() {
             try {
                 await auth.saveSettings(settings);
             } catch (error) {
-                showMessage('msgSettingsSaveError', 'error');
+                console.error('Failed to save settings to server:', error);
             }
         } else {
             localStorage.setItem(LS_KEYS.SETTINGS, JSON.stringify(settings));
         }
-    }, 1000);
+    }, 1500);
 }
 
 async function loadAndApplySettings() {
     let settings = {};
+    const localSettings = localStorage.getItem(LS_KEYS.SETTINGS);
+    if (localSettings) {
+        settings = JSON.parse(localSettings);
+    }
+
     if (auth.isLoggedIn()) {
         try {
-            settings = await auth.getSettings();
+            const serverSettings = await auth.getSettings();
+            settings = { ...settings, ...serverSettings };
         } catch (error) {
-            showMessage('msgSettingsLoadError', 'error');
-            const localSettings = localStorage.getItem(LS_KEYS.SETTINGS);
-            settings = localSettings ? JSON.parse(localSettings) : {};
+            console.error('Could not load settings from the server.', error);
         }
-    } else {
-        const localSettings = localStorage.getItem(LS_KEYS.SETTINGS);
-        settings = localSettings ? JSON.parse(localSettings) : {};
     }
     applySettings(settings);
 }
@@ -97,22 +95,6 @@ export async function handleSuccessfulLogin() {
     await renderDocumentList();
     setLanguage(appState.currentLanguage, true);
     updateTextStats();
-
-    const lastDocId = localStorage.getItem(LS_KEYS.LAST_DOC_ID);
-    if (lastDocId) {
-        const docElement = dom.documentList.querySelector(`.document-item[data-id="${lastDocId}"]`);
-        if (docElement) {
-            try {
-                const documentToLoad = await auth.getDocument(lastDocId);
-                if (documentToLoad) {
-                    loadDocument(documentToLoad);
-                }
-            } catch (error) {
-                console.error("Failed to load last opened document:", error);
-                localStorage.removeItem(LS_KEYS.LAST_DOC_ID);
-            }
-        }
-    }
 }
 
 export function handleLogout() {
@@ -121,7 +103,6 @@ export function handleLogout() {
     if (documentState.simplemde) documentState.simplemde.value('');
     updateAuthUI();
     renderDocumentList();
-    showMessage('msgLogoutSuccess', 'success');
 }
 
 async function initializeApp() {
@@ -143,9 +124,9 @@ async function initializeApp() {
         updateButtonStates("initial");
         updateProgressBar();
 
-        const hasVisited = localStorage.getItem(LS_KEYS.HAS_VISITED);
-        if (!hasVisited) {
-            dom.welcomeDialog?.show();
+        if (!localStorage.getItem(LS_KEYS.HAS_VISITED)) {
+            const welcomeDialog = document.getElementById('welcome-dialog');
+            if(welcomeDialog) welcomeDialog.show();
             localStorage.setItem(LS_KEYS.HAS_VISITED, 'true');
         }
 
