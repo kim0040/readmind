@@ -1,5 +1,6 @@
 // ui.js - UI logic, DOM manipulation, and event listeners.
 
+import { translations } from './translations.js';
 import * as auth from './auth.js';
 import { appState, readerState, documentState } from "./state.js";
 import { handleSuccessfulLogin, handleLogout, scheduleSave } from "./main.js";

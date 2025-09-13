@@ -1,5 +1,5 @@
 // translations.js
-const translations = {
+export const translations = {
   en: {
     pageTitle: "ReadMind - Speed Reading & Text Analysis",
     siteName: "ReadMind",
