@@ -105,6 +105,46 @@ export async function updateTextStats() {
         });
     }
     updateProgressBar();
+    updateDetailedStats(currentText);
+}
+
+function updateDetailedStats(text) {
+    if (!text || text.trim() === "") {
+        if (dom.readabilityScore) dom.readabilityScore.textContent = "-";
+        if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "-";
+        if (dom.syllableCount) dom.syllableCount.textContent = "-";
+        if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = "-";
+        return;
+    }
+
+    try {
+        const analysis = textifyer(text);
+
+        if (dom.readabilityScore) {
+            dom.readabilityScore.textContent = analysis.getFleschKincaidGrade().toFixed(1);
+        }
+        if (dom.avgSentenceLength) {
+            const wordCount = analysis.getWordCount();
+            const sentenceCount = analysis.getSentenceCount();
+            if (sentenceCount > 0) {
+                dom.avgSentenceLength.textContent = (wordCount / sentenceCount).toFixed(1);
+            } else {
+                dom.avgSentenceLength.textContent = wordCount > 0 ? wordCount.toFixed(1) : "-";
+            }
+        }
+        if (dom.syllableCount) {
+            dom.syllableCount.textContent = analysis.getSyllableCount();
+        }
+        if (dom.lexicalDiversity) {
+            dom.lexicalDiversity.textContent = (analysis.getLexicalDiversity() * 100).toFixed(1) + '%';
+        }
+    } catch (error) {
+        console.error("Error calculating detailed stats:", error);
+        if (dom.readabilityScore) dom.readabilityScore.textContent = "N/A";
+        if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "N/A";
+        if (dom.syllableCount) dom.syllableCount.textContent = "N/A";
+        if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = "N/A";
+    }
 }
 
 export async function handleTextChange(newTextSourceOrEvent) {

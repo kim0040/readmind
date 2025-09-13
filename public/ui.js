@@ -59,6 +59,12 @@ export const dom = {
     // Document List
     documentList: document.getElementById("document-list"),
     authStatus: document.getElementById("auth-status"),
+
+    // Detailed Stats
+    readabilityScore: document.getElementById("readability-score"),
+    avgSentenceLength: document.getElementById("avg-sentence-length"),
+    syllableCount: document.getElementById("syllable-count"),
+    lexicalDiversity: document.getElementById("lexical-diversity"),
 };
 
 function openAuthModal(isLogin = true) {
