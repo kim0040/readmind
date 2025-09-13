@@ -89,6 +89,48 @@ function closeAuthModal() {
     }, 300);
 }
 
+export function showConfirmationModal(titleKey, messageKey, onConfirm) {
+    const overlay = document.getElementById('confirmation-modal-overlay');
+    const titleEl = document.getElementById('confirmation-modal-title');
+    const messageEl = document.getElementById('confirmation-modal-message');
+    const confirmBtn = document.getElementById('confirmation-modal-confirm-button');
+    const cancelBtn = document.getElementById('confirmation-modal-cancel-button');
+
+    if (!overlay || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
+        console.error('Confirmation modal elements not found');
+        return;
+    }
+
+    titleEl.textContent = getTranslation(titleKey);
+    messageEl.textContent = getTranslation(messageKey);
+    confirmBtn.textContent = getTranslation('confirmButton');
+    cancelBtn.textContent = getTranslation('cancelButton');
+
+    // To prevent multiple listeners from being attached, we clone and replace the buttons
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    const close = () => {
+        overlay.classList.add('hidden');
+    };
+
+    newConfirmBtn.onclick = () => {
+        onConfirm();
+        close();
+    };
+
+    newCancelBtn.onclick = close;
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            close();
+        }
+    };
+
+    overlay.classList.remove('hidden');
+}
+
 export function updateAuthUI() {
     const isLoggedIn = auth.isLoggedIn();
     dom.loginButton?.classList.toggle('hidden', isLoggedIn);
@@ -125,24 +167,10 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     return text;
 }
 
-export function applyTheme(theme, isDark) {
-    // Apply the color theme to the body
-    if (theme) {
-        document.body.dataset.theme = theme;
-        if (dom.themeSelector) dom.themeSelector.value = theme;
-    }
-
-    // Apply dark/light mode to the root element
+export function applyTheme(isDark) {
     document.documentElement.classList.toggle("dark", isDark);
-
-    // Update icon visibility
     dom.themeToggleDarkIcon?.classList.toggle("hidden", !isDark);
     dom.themeToggleLightIcon?.classList.toggle("hidden", isDark);
-
-    // Update the toggle's state if it exists
-    if (dom.darkModeToggle) {
-        dom.darkModeToggle.selected = isDark;
-    }
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -306,22 +334,12 @@ function setupAuthEventListeners() {
 
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
-
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = !document.documentElement.classList.contains('dark');
-        const currentTheme = dom.themeSelector?.value || 'blue';
+        const isDark = document.documentElement.classList.toggle("dark");
         appState.userHasManuallySetTheme = true;
-        applyTheme(currentTheme, isDark);
+        applyTheme(isDark);
         scheduleSave();
     });
-
-    dom.themeSelector?.addEventListener('change', (e) => {
-        const newTheme = e.target.value;
-        const isDark = document.documentElement.classList.contains('dark');
-        applyTheme(newTheme, isDark);
-        scheduleSave();
-    });
-
     dom.languageSelector?.addEventListener("change", (event) => {
         setLanguage(event.target.value);
         scheduleSave();
