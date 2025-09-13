@@ -88,19 +88,9 @@ const translations = {
     error_SERVER_ERROR_SIGNUP: "A server error occurred during sign up. Please try again later.",
     error_INVALID_CREDENTIALS: "Invalid email or password.",
     error_SERVER_ERROR_LOGIN: "A server error occurred during login. Please try again later.",
-    error_UNKNOWN: "An unknown error occurred. Please try again.",
-    detailedStatsTitle: "Detailed Analysis",
-    readabilityScoreLabel: "Readability",
-    avgSentenceLengthLabel: "Avg. Sentence",
-    syllableCountLabel: "Syllables",
-    lexicalDiversityLabel: "Lexical Diversity",
+    error_UNKNOWN: "An unknown error occurred. Please try again."
   },
   ko: {
-    detailedStatsTitle: "상세 분석",
-    readabilityScoreLabel: "가독성",
-    avgSentenceLengthLabel: "평균 문장 길이",
-    syllableCountLabel: "음절",
-    lexicalDiversityLabel: "어휘 다양성",
     pageTitle: "리드마인드 (ReadMind) - 속독 훈련 및 텍스트 분석",
     siteName: "ReadMind",
     siteNativeName: "리드마인드",
@@ -516,7 +506,7 @@ const translations = {
     error_SERVER_ERROR_SIGNUP: "साइन अप के दौरान एक सर्वर त्रुटि हुई। कृपया बाद में पुन: प्रयास करें।",
     error_INVALID_CREDENTIALS: "अमान्य ईमेल या पासवर्ड।",
     error_SERVER_ERROR_LOGIN: "लॉगिन के दौरान एक सर्वर त्रुटि हुई। कृपया बाद में पुन: प्रयास करें।",
-    error_UNKNOWN: "एक अज्ञात त्रुटि हुई। कृपया पुन: प्रयास करें。"
+    error_UNKNOWN: "एक अज्ञात त्रुटि हुई। कृपया पुन: प्रयास करें।"
   },
   es: {
     pageTitle: "ReadMind - Lectura Rápida y Análisis de Texto",

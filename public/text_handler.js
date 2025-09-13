@@ -92,48 +92,19 @@ export async function updateTextStats() {
         const displayMinutes = Math.floor(totalSeconds / 60);
         const displaySeconds = totalSeconds % 60;
         if (dom.estimatedReadingTimeDisplay) {
-            dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormat", appState.currentLanguage, { min: displayMinutes, sec: (displaySeconds < 10 ? "0" : "") + displaySeconds });
+            dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormat", appState.currentLanguage, "en", { min: displayMinutes, sec: (displaySeconds < 10 ? "0" : "") + displaySeconds });
         }
     } else {
         if (dom.estimatedReadingTimeDisplay) dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormatZero");
     }
     if (dom.progressInfoDisplay) {
-        dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, {
+        dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, "en", {
             unit: readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage) ? getTranslation("charsLabel") : getTranslation("wordsLabel"),
             current: readerState.currentIndex,
             total: readerState.words.length,
         });
     }
     updateProgressBar();
-    updateDetailedStats(currentText);
-}
-
-function updateDetailedStats(text) {
-    if (typeof textReadability === 'undefined') {
-        return; // Library not loaded
-    }
-    if (!text || text.trim() === "") {
-        if (dom.readabilityScore) dom.readabilityScore.textContent = "-";
-        if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "-";
-        if (dom.syllableCount) dom.syllableCount.textContent = "-";
-        if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = "-";
-        return;
-    }
-    try {
-        if (dom.readabilityScore) dom.readabilityScore.textContent = textReadability.fleschKincaidGrade(text).toFixed(1);
-        const wordCount = textReadability.lexiconCount(text);
-        const sentenceCount = textReadability.sentenceCount(text);
-        if (dom.avgSentenceLength) {
-            dom.avgSentenceLength.textContent = sentenceCount > 0 ? (wordCount / sentenceCount).toFixed(1) : (wordCount > 0 ? wordCount.toFixed(1) : "-");
-        }
-        if (dom.syllableCount) dom.syllableCount.textContent = textReadability.syllableCount(text);
-        if (dom.lexicalDiversity) {
-            const uniqueWords = [...new Set(text.toLowerCase().match(/\b\w+\b/g) || [])].length;
-            dom.lexicalDiversity.textContent = wordCount > 0 ? ((uniqueWords / wordCount) * 100).toFixed(1) + '%' : "-";
-        }
-    } catch (error) {
-        console.error("Error calculating detailed stats:", error);
-    }
 }
 
 export async function handleTextChange(newTextSourceOrEvent) {

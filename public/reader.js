@@ -61,7 +61,7 @@ function displayNextWord() {
             } else {
                 unitLabel = getTranslation("wordsLabel");
             }
-            dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, { unit: unitLabel, current: readerState.currentIndex, total: readerState.words.length });
+            dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, "en", { unit: unitLabel, current: readerState.currentIndex, total: readerState.words.length });
         }
         updateProgressBar();
     } else {
@@ -176,14 +176,6 @@ export function pauseReading() {
     updateButtonStates("paused");
     scheduleSave();
     localStorage.setItem(LS_KEYS.INDEX, readerState.currentIndex.toString());
-}
-
-export function updateReadingSpeed(newWpm) {
-    readerState.currentWpm = newWpm;
-    if (readerState.intervalId) { // Only if reading is in progress
-        clearInterval(readerState.intervalId);
-        readerState.intervalId = setInterval(displayNextWord, 60000 / newWpm);
-    }
 }
 
 function resumeTeleprompter() {
