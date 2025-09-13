@@ -44,6 +44,44 @@
 *   **웹 서버 (Web Server)**:
     *   `Caddy`: 복잡한 설정 없이도 자동으로 HTTPS 암호화(SSL 인증서)를 적용해주는 현대적인 웹 서버입니다.
 
+## 📂 프로젝트 구조 (Project Structure)
+애플리케이션은 다음과 같은 구조로 구성되어 있습니다. 각 파일과 폴더는 명확한 역할을 수행합니다.
+```
+readmind-main/
+├── backend/                  # 백엔드 서버 (Node.js, Express)
+│   ├── middleware/           # API 요청 중간 처리 로직
+│   │   ├── auth.js           # JWT 토큰 인증 미들웨어
+│   │   └── captcha_verification.js # reCAPTCHA 검증 미들웨어
+│   ├── routes/               # 기능별 API 라우트 정의
+│   │   ├── auth.js           # 인증 (로그인/회원가입) API
+│   │   ├── documents.js      # 문서 CRUD API
+│   │   ├── settings.js       # 사용자 설정 API
+│   │   └── health.js         # 서버 상태 확인 API
+│   ├── .env                  # (생성 필요) API 키 등 비밀 정보 저장
+│   ├── database.js           # SQLite 데이터베이스 연결 및 테이블 설정
+│   ├── package.json          # 백엔드 의존성 패키지 목록
+│   └── server.js             # Express 서버 메인 파일 (미들웨어 및 앱 설정)
+│
+├── public/                   # 프론트엔드 (사용자가 보는 웹페이지)
+│   ├── auth.js               # 로그인, 회원가입 API 통신 로직
+│   ├── document_manager.js   # 문서 CRUD 및 목록 관리 로직
+│   ├── main.js               # 앱 초기화 및 메인 로직 (엔트리 포인트)
+│   ├── reader.js             # 속독 엔진 핵심 로직
+│   ├── state.js              # 전역 상태 (기능별로 분리됨)
+│   ├── text_handler.js       # 텍스트 분석 및 통계 처리
+│   ├── translations.js       # 다국어 텍스트 지원
+│   ├── ui.js                 # DOM 조작 및 이벤트 리스너
+│   ├── utils.js              # 유용한 유틸리티 함수 (예: debounce)
+│   ├── index.html            # 메인 HTML 파일
+│   └── style.css             # 커스텀 CSS 스타일
+│
+├── .gitignore                # Git 버전 관리에서 제외할 파일 목록
+├── Caddyfile                 # Caddy 웹 서버 설정 파일
+├── README.md                 # 프로젝트 설명 및 가이드 (현재 파일)
+├── setup.sh                  # 서버 초기 환경 자동 설치 스크립트
+└── traffic-limiter.sh        # (선택) 월별 트래픽 제한 스크립트
+```
+
 ---
 
 ## 🚀 ReadMind 서버 배포 가이드 (게임 공략집 Ver.)
