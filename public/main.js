@@ -1,7 +1,7 @@
 // main.js - The entry point of the application.
 import * as auth from './auth.js';
 import { appState, readerState, documentState, LS_KEYS } from './state.js';
-import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage } from './ui.js';
+import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage, applyReaderStyles } from './ui.js';
 import { updateTextStats } from './text_handler.js';
 import { formatWordWithFixation, updateProgressBar } from './reader.js';
 import { renderDocumentList, attachDocumentEventListeners, loadDocument } from './document_manager.js';
@@ -9,7 +9,6 @@ import { renderDocumentList, attachDocumentEventListeners, loadDocument } from '
 // --- Settings Management ---
 
 function getCurrentSettings() {
-    const editor = document.querySelector('.CodeMirror');
     return {
         language: appState.currentLanguage,
         colorTheme: document.body.dataset.theme || 'blue',
@@ -19,8 +18,8 @@ function getCurrentSettings() {
         wpm: readerState.currentWpm,
         chunkSize: readerState.chunkSize,
         readingMode: readerState.readingMode,
-        fontFamily: editor?.style.fontFamily || "'Roboto', sans-serif",
-        fontSize: editor?.style.fontSize ? parseInt(editor.style.fontSize, 10) : 16,
+        fontFamily: appState.fontFamily,
+        fontSize: appState.fontSize,
         text: documentState.simplemde ? documentState.simplemde.value() : (dom.textInput ? dom.textInput.value : ''),
     };
 }
@@ -48,14 +47,13 @@ function applySettings(settings) {
     readerState.readingMode = settings.readingMode || 'flash';
     if (dom.readingModeSelector) dom.readingModeSelector.value = readerState.readingMode;
 
-    const editor = document.querySelector('.CodeMirror');
-    if (editor) {
-        editor.style.fontFamily = settings.fontFamily || "'Roboto', sans-serif";
-        editor.style.fontSize = `${settings.fontSize || 16}px`;
-    }
-    if (dom.fontFamilySelector) dom.fontFamilySelector.value = settings.fontFamily || "'Roboto', sans-serif";
-    if (dom.fontSizeSlider) dom.fontSizeSlider.value = settings.fontSize || 16;
-    if (dom.fontSizeLabel) dom.fontSizeLabel.textContent = `Font Size: ${settings.fontSize || 16}px`;
+    // Apply reader font settings
+    appState.fontFamily = settings.fontFamily || "'Roboto', sans-serif";
+    appState.fontSize = settings.fontSize || 48; // Default to a larger reader font size
+    if (dom.fontFamilySelector) dom.fontFamilySelector.value = appState.fontFamily;
+    if (dom.fontSizeSlider) dom.fontSizeSlider.value = appState.fontSize;
+    if (dom.fontSizeLabel) dom.fontSizeLabel.textContent = `Font Size: ${appState.fontSize}px`;
+    applyReaderStyles(appState.fontFamily, appState.fontSize);
 
 
     if (settings.text && dom.textInput) {

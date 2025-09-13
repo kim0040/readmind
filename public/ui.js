@@ -135,6 +135,13 @@ export function showConfirmationModal(titleKey, messageKey, onConfirm) {
     overlay.classList.remove('hidden');
 }
 
+export function applyReaderStyles(fontFamily, fontSize) {
+    if (dom.currentWordDisplay) {
+        dom.currentWordDisplay.style.fontFamily = fontFamily;
+        dom.currentWordDisplay.style.fontSize = `${fontSize}px`;
+    }
+}
+
 export function updateAuthUI() {
     const isLoggedIn = auth.isLoggedIn();
     dom.loginButton?.classList.toggle('hidden', isLoggedIn);
@@ -287,20 +294,18 @@ function setupReaderControls() {
 
     // Event listeners for font controls
     dom.fontFamilySelector?.addEventListener('change', (e) => {
-        if(documentState.simplemde) {
-            documentState.simplemde.codemirror.getWrapperElement().style.fontFamily = e.target.value;
-        }
+        appState.fontFamily = e.target.value;
+        applyReaderStyles(appState.fontFamily, appState.fontSize);
         scheduleSave();
     });
 
     dom.fontSizeSlider?.addEventListener('input', (e) => {
         const newSize = e.target.value;
-        if(documentState.simplemde) {
-            documentState.simplemde.codemirror.getWrapperElement().style.fontSize = `${newSize}px`;
-        }
+        appState.fontSize = newSize;
         if(dom.fontSizeLabel) {
             dom.fontSizeLabel.textContent = `Font Size: ${newSize}px`;
         }
+        applyReaderStyles(appState.fontFamily, appState.fontSize);
         scheduleSave();
     });
 }
