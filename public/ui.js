@@ -125,10 +125,24 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     return text;
 }
 
-export function applyTheme(isDark) {
+export function applyTheme(theme, isDark) {
+    // Apply the color theme to the body
+    if (theme) {
+        document.body.dataset.theme = theme;
+        if (dom.themeSelector) dom.themeSelector.value = theme;
+    }
+
+    // Apply dark/light mode to the root element
     document.documentElement.classList.toggle("dark", isDark);
+
+    // Update icon visibility
     dom.themeToggleDarkIcon?.classList.toggle("hidden", !isDark);
     dom.themeToggleLightIcon?.classList.toggle("hidden", isDark);
+
+    // Update the toggle's state if it exists
+    if (dom.darkModeToggle) {
+        dom.darkModeToggle.selected = isDark;
+    }
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -292,12 +306,22 @@ function setupAuthEventListeners() {
 
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
+
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = document.documentElement.classList.toggle("dark");
+        const isDark = !document.documentElement.classList.contains('dark');
+        const currentTheme = dom.themeSelector?.value || 'blue';
         appState.userHasManuallySetTheme = true;
-        applyTheme(isDark);
+        applyTheme(currentTheme, isDark);
         scheduleSave();
     });
+
+    dom.themeSelector?.addEventListener('change', (e) => {
+        const newTheme = e.target.value;
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(newTheme, isDark);
+        scheduleSave();
+    });
+
     dom.languageSelector?.addEventListener("change", (event) => {
         setLanguage(event.target.value);
         scheduleSave();

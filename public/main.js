@@ -34,7 +34,6 @@ function applySettings(settings) {
     const isDark = settings.darkMode ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
     const theme = settings.colorTheme || 'blue';
     applyTheme(theme, isDark);
-    if (dom.themeSelector) dom.themeSelector.value = theme;
 
 
     readerState.isFixationPointEnabled = settings.isFixationPointEnabled || false;
