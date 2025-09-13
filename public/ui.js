@@ -3,7 +3,7 @@
 import * as auth from './auth.js';
 import { appState, readerState, documentState } from "./state.js";
 import { handleSuccessfulLogin, handleLogout, scheduleSave } from "./main.js";
-import { pauseReading, startReadingFlow, updateReadingSpeed } from "./reader.js";
+import { pauseReading, startReadingFlow } from "./reader.js";
 import { updateTextStats, handleTextChange } from "./text_handler.js";
 
 export const dom = {
@@ -36,14 +36,10 @@ export const dom = {
     darkModeToggle: document.getElementById("dark-mode-toggle"),
     themeToggleDarkIcon: document.getElementById("theme-toggle-dark-icon"),
     themeToggleLightIcon: document.getElementById("theme-toggle-light-icon"),
-    themeSelector: document.getElementById("theme-selector"),
     fixationToggle: document.getElementById("fixation-toggle"),
     languageSelector: document.getElementById("language-selector"),
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
     readingModeSelector: document.getElementById("reading-mode-selector"),
-    fontFamilySelector: document.getElementById("font-family-selector"),
-    fontSizeSlider: document.getElementById("font-size-slider"),
-    fontSizeLabel: document.getElementById("font-size-label"),
 
     // Auth Modal
     authModalOverlay: document.getElementById("auth-modal-overlay"),
@@ -93,6 +89,48 @@ function closeAuthModal() {
     }, 300);
 }
 
+export function showConfirmationModal(titleKey, messageKey, onConfirm) {
+    const overlay = document.getElementById('confirmation-modal-overlay');
+    const titleEl = document.getElementById('confirmation-modal-title');
+    const messageEl = document.getElementById('confirmation-modal-message');
+    const confirmBtn = document.getElementById('confirmation-modal-confirm-button');
+    const cancelBtn = document.getElementById('confirmation-modal-cancel-button');
+
+    if (!overlay || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
+        console.error('Confirmation modal elements not found');
+        return;
+    }
+
+    titleEl.textContent = getTranslation(titleKey);
+    messageEl.textContent = getTranslation(messageKey);
+    confirmBtn.textContent = getTranslation('confirmButton');
+    cancelBtn.textContent = getTranslation('cancelButton');
+
+    // To prevent multiple listeners from being attached, we clone and replace the buttons
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    const close = () => {
+        overlay.classList.add('hidden');
+    };
+
+    newConfirmBtn.onclick = () => {
+        onConfirm();
+        close();
+    };
+
+    newCancelBtn.onclick = close;
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            close();
+        }
+    };
+
+    overlay.classList.remove('hidden');
+}
+
 export function updateAuthUI() {
     const isLoggedIn = auth.isLoggedIn();
     dom.loginButton?.classList.toggle('hidden', isLoggedIn);
@@ -119,32 +157,20 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     let text = langToUse?.[key] || key;
     if (params) {
         for (const pKey in params) {
+            // BUG FIX: Use a simple, safe string replacement instead of a complex RegExp.
+            // This prevents errors when a key is a number (e.g., {0}).
             const placeholder = `{${pKey}}`;
+            // Use replaceAll to handle multiple occurrences of the same placeholder.
             text = text.replaceAll(placeholder, params[pKey]);
         }
     }
     return text;
 }
 
-export function applyReaderStyles(fontFamily, fontSize) {
-    if (dom.currentWordDisplay) {
-        dom.currentWordDisplay.style.fontFamily = fontFamily;
-        dom.currentWordDisplay.style.fontSize = `${fontSize}px`;
-    }
-}
-
-export function applyTheme(theme, isDark) {
-    if (theme) {
-        document.body.dataset.theme = theme;
-    }
+export function applyTheme(isDark) {
     document.documentElement.classList.toggle("dark", isDark);
-
-    if (dom.themeToggleDarkIcon) {
-        dom.themeToggleDarkIcon.style.display = isDark ? 'inline-flex' : 'none';
-    }
-    if (dom.themeToggleLightIcon) {
-        dom.themeToggleLightIcon.style.display = isDark ? 'none' : 'inline-flex';
-    }
+    dom.themeToggleDarkIcon?.classList.toggle("hidden", !isDark);
+    dom.themeToggleLightIcon?.classList.toggle("hidden", isDark);
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -228,27 +254,16 @@ function setupReaderControls() {
         scheduleSave();
     });
     dom.wpmInput?.addEventListener("input", () => {
-        const newWpm = parseInt(dom.wpmInput.value, 10);
+        readerState.currentWpm = parseInt(dom.wpmInput.value, 10);
         updateTextStats();
         scheduleSave();
-        updateReadingSpeed(newWpm);
+        if (readerState.intervalId) {
+            clearInterval(readerState.intervalId);
+            readerState.intervalId = setInterval(displayNextWord, 60000 / readerState.currentWpm);
+        }
     });
     dom.fixationToggle?.addEventListener("change", () => {
         readerState.isFixationPointEnabled = dom.fixationToggle.checked;
-        scheduleSave();
-    });
-    dom.fontFamilySelector?.addEventListener('change', (e) => {
-        appState.fontFamily = e.target.value;
-        applyReaderStyles(appState.fontFamily, appState.fontSize);
-        scheduleSave();
-    });
-    dom.fontSizeSlider?.addEventListener('input', (e) => {
-        const newSize = e.target.value;
-        appState.fontSize = newSize;
-        if(dom.fontSizeLabel) {
-            dom.fontSizeLabel.textContent = `Font Size: ${newSize}px`;
-        }
-        applyReaderStyles(appState.fontFamily, appState.fontSize);
         scheduleSave();
     });
 }
@@ -320,16 +335,9 @@ function setupAuthEventListeners() {
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = !document.documentElement.classList.contains('dark');
-        const currentTheme = dom.themeSelector?.value || 'blue';
+        const isDark = document.documentElement.classList.toggle("dark");
         appState.userHasManuallySetTheme = true;
-        applyTheme(currentTheme, isDark);
-        scheduleSave();
-    });
-    dom.themeSelector?.addEventListener('change', (e) => {
-        const newTheme = e.target.value;
-        const isDark = document.documentElement.classList.contains('dark');
-        applyTheme(newTheme, isDark);
+        applyTheme(isDark);
         scheduleSave();
     });
     dom.languageSelector?.addEventListener("change", (event) => {
