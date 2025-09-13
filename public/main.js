@@ -9,14 +9,18 @@ import { renderDocumentList, attachDocumentEventListeners, loadDocument } from '
 // --- Settings Management ---
 
 function getCurrentSettings() {
+    const editor = document.querySelector('.CodeMirror');
     return {
         language: appState.currentLanguage,
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        colorTheme: document.body.dataset.theme || 'blue',
+        darkMode: document.documentElement.classList.contains('dark'),
         userHasManuallySetTheme: appState.userHasManuallySetTheme,
         isFixationPointEnabled: readerState.isFixationPointEnabled,
         wpm: readerState.currentWpm,
         chunkSize: readerState.chunkSize,
         readingMode: readerState.readingMode,
+        fontFamily: editor?.style.fontFamily || "'Roboto', sans-serif",
+        fontSize: editor?.style.fontSize ? parseInt(editor.style.fontSize, 10) : 16,
         text: documentState.simplemde ? documentState.simplemde.value() : (dom.textInput ? dom.textInput.value : ''),
     };
 }
@@ -26,11 +30,12 @@ function applySettings(settings) {
     appState.currentLanguage = translations[lang] ? lang : "ko";
 
     appState.userHasManuallySetTheme = settings.userHasManuallySetTheme || false;
-    if (settings.theme) {
-        applyTheme(settings.theme === "dark");
-    } else if (!appState.userHasManuallySetTheme) {
-        applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
+
+    const isDark = settings.darkMode ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = settings.colorTheme || 'blue';
+    applyTheme(theme, isDark);
+    if (dom.themeSelector) dom.themeSelector.value = theme;
+
 
     readerState.isFixationPointEnabled = settings.isFixationPointEnabled || false;
     if (dom.fixationToggle) dom.fixationToggle.checked = readerState.isFixationPointEnabled;
@@ -43,6 +48,16 @@ function applySettings(settings) {
 
     readerState.readingMode = settings.readingMode || 'flash';
     if (dom.readingModeSelector) dom.readingModeSelector.value = readerState.readingMode;
+
+    const editor = document.querySelector('.CodeMirror');
+    if (editor) {
+        editor.style.fontFamily = settings.fontFamily || "'Roboto', sans-serif";
+        editor.style.fontSize = `${settings.fontSize || 16}px`;
+    }
+    if (dom.fontFamilySelector) dom.fontFamilySelector.value = settings.fontFamily || "'Roboto', sans-serif";
+    if (dom.fontSizeSlider) dom.fontSizeSlider.value = settings.fontSize || 16;
+    if (dom.fontSizeLabel) dom.fontSizeLabel.textContent = `Font Size: ${settings.fontSize || 16}px`;
+
 
     if (settings.text && dom.textInput) {
         dom.textInput.value = settings.text;
@@ -158,6 +173,13 @@ async function initializeApp() {
 
         updateButtonStates(initialState);
         updateProgressBar();
+
+        const hasVisited = localStorage.getItem(LS_KEYS.HAS_VISITED);
+        if (!hasVisited) {
+            dom.welcomeDialog?.show();
+            localStorage.setItem(LS_KEYS.HAS_VISITED, 'true');
+        }
+
     } catch (error) {
         console.error("Error during app initialization:", error);
         // Even if initialization fails, we must attach event listeners so the user can try to log in, etc.

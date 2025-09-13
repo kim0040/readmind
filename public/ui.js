@@ -39,6 +39,11 @@ export const dom = {
     confirmationModalMessage: document.getElementById("confirmation-modal-message"),
     confirmationModalConfirmButton: document.getElementById("confirmation-modal-confirm-button"),
     confirmationModalCancelButton: document.getElementById("confirmation-modal-cancel-button"),
+    themeSelector: document.getElementById("theme-selector"),
+    welcomeDialog: document.getElementById("welcome-dialog"),
+    fontFamilySelector: document.getElementById("font-family-selector"),
+    fontSizeSlider: document.getElementById("font-size-slider"),
+    fontSizeLabel: document.getElementById("font-size-label"),
 
     // Sidebar
     documentSidebar: document.getElementById("document-sidebar"),
@@ -118,12 +123,15 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     return text;
 }
 
-export function applyTheme(isDark) {
-    const darkIcon = dom.darkModeToggle?.querySelector('#theme-toggle-dark-icon');
-    const lightIcon = dom.darkModeToggle?.querySelector('#theme-toggle-light-icon');
+export function applyTheme(theme, isDark) {
+    document.body.dataset.theme = theme || 'blue';
+    const darkIcon = dom.darkModeToggle?.querySelector('md-icon[id="theme-toggle-dark-icon"]');
+    const lightIcon = dom.darkModeToggle?.querySelector('md-icon[id="theme-toggle-light-icon"]');
     document.documentElement.classList.toggle("dark", isDark);
-    darkIcon?.classList.toggle("hidden", !isDark);
-    lightIcon?.classList.toggle("hidden", isDark);
+    if (darkIcon && lightIcon) {
+        darkIcon.style.display = isDark ? 'block' : 'none';
+        lightIcon.style.display = isDark ? 'none' : 'block';
+    }
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -218,6 +226,25 @@ function setupReaderControls() {
         readerState.isFixationPointEnabled = e.target.selected;
         scheduleSave();
     });
+
+    dom.fontFamilySelector?.addEventListener('change', (e) => {
+        const editor = document.querySelector('.CodeMirror');
+        if (editor) {
+            editor.style.fontFamily = e.target.value;
+        }
+        scheduleSave();
+    });
+
+    dom.fontSizeSlider?.addEventListener('input', (e) => {
+        const editor = document.querySelector('.CodeMirror');
+        if (editor) {
+            editor.style.fontSize = `${e.target.value}px`;
+        }
+        if (dom.fontSizeLabel) {
+            dom.fontSizeLabel.textContent = `Font Size: ${e.target.value}px`;
+        }
+        scheduleSave();
+    });
 }
 
 function setupActionButtons() {
@@ -278,13 +305,21 @@ function setupAuthEventListeners() {
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = document.documentElement.classList.toggle("dark");
+        const isDark = !document.documentElement.classList.contains('dark');
+        const theme = document.body.dataset.theme || 'blue';
         appState.userHasManuallySetTheme = true;
-        applyTheme(isDark);
+        applyTheme(theme, isDark);
         scheduleSave();
     });
     dom.languageSelector?.addEventListener("change", (event) => {
         setLanguage(event.target.value);
+        scheduleSave();
+    });
+
+    dom.themeSelector?.addEventListener('change', (e) => {
+        const newTheme = e.target.value;
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(newTheme, isDark);
         scheduleSave();
     });
 }
