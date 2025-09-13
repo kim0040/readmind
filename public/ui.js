@@ -59,12 +59,6 @@ export const dom = {
     // Document List
     documentList: document.getElementById("document-list"),
     authStatus: document.getElementById("auth-status"),
-
-    // Detailed Stats
-    readabilityScore: document.getElementById("readability-score"),
-    avgSentenceLength: document.getElementById("avg-sentence-length"),
-    syllableCount: document.getElementById("syllable-count"),
-    lexicalDiversity: document.getElementById("lexical-diversity"),
 };
 
 function openAuthModal(isLogin = true) {
@@ -99,55 +93,6 @@ function closeAuthModal() {
     }, 300);
 }
 
-export function showConfirmationModal(titleKey, messageKey, onConfirm) {
-    const overlay = document.getElementById('confirmation-modal-overlay');
-    const titleEl = document.getElementById('confirmation-modal-title');
-    const messageEl = document.getElementById('confirmation-modal-message');
-    const confirmBtn = document.getElementById('confirmation-modal-confirm-button');
-    const cancelBtn = document.getElementById('confirmation-modal-cancel-button');
-
-    if (!overlay || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
-        console.error('Confirmation modal elements not found');
-        return;
-    }
-
-    titleEl.textContent = getTranslation(titleKey);
-    messageEl.textContent = getTranslation(messageKey);
-    confirmBtn.textContent = getTranslation('confirmButton');
-    cancelBtn.textContent = getTranslation('cancelButton');
-
-    // Clone and replace buttons to remove old event listeners
-    const newConfirmBtn = confirmBtn.cloneNode(true);
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-    const close = () => {
-        overlay.classList.add('hidden');
-    };
-
-    newConfirmBtn.onclick = () => {
-        onConfirm();
-        close();
-    };
-
-    newCancelBtn.onclick = close;
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            close();
-        }
-    };
-
-    overlay.classList.remove('hidden');
-}
-
-export function applyReaderStyles(fontFamily, fontSize) {
-    if (dom.currentWordDisplay) {
-        dom.currentWordDisplay.style.fontFamily = fontFamily;
-        dom.currentWordDisplay.style.fontSize = `${fontSize}px`;
-    }
-}
-
 export function updateAuthUI() {
     const isLoggedIn = auth.isLoggedIn();
     dom.loginButton?.classList.toggle('hidden', isLoggedIn);
@@ -174,36 +119,31 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     let text = langToUse?.[key] || key;
     if (params) {
         for (const pKey in params) {
-            // BUG FIX: Use a simple, safe string replacement instead of a complex RegExp.
-            // This prevents errors when a key is a number (e.g., {0}).
             const placeholder = `{${pKey}}`;
-            // Use replaceAll to handle multiple occurrences of the same placeholder.
             text = text.replaceAll(placeholder, params[pKey]);
         }
     }
     return text;
 }
 
+export function applyReaderStyles(fontFamily, fontSize) {
+    if (dom.currentWordDisplay) {
+        dom.currentWordDisplay.style.fontFamily = fontFamily;
+        dom.currentWordDisplay.style.fontSize = `${fontSize}px`;
+    }
+}
+
 export function applyTheme(theme, isDark) {
-    // Apply the color theme to the body
     if (theme) {
         document.body.dataset.theme = theme;
-        // Also update the selector component's value if it exists
-        const themeSelector = document.getElementById('theme-selector');
-        if (themeSelector) themeSelector.value = theme;
     }
-
-    // Apply dark/light mode to the root element
     document.documentElement.classList.toggle("dark", isDark);
 
-    // Update icon visibility
-    const darkIcon = document.getElementById('theme-toggle-dark-icon');
-    const lightIcon = document.getElementById('theme-toggle-light-icon');
-    if (darkIcon) {
-        darkIcon.style.display = isDark ? 'inline-flex' : 'none';
+    if (dom.themeToggleDarkIcon) {
+        dom.themeToggleDarkIcon.style.display = isDark ? 'inline-flex' : 'none';
     }
-    if (lightIcon) {
-        lightIcon.style.display = isDark ? 'none' : 'inline-flex';
+    if (dom.themeToggleLightIcon) {
+        dom.themeToggleLightIcon.style.display = isDark ? 'none' : 'inline-flex';
     }
 }
 
@@ -289,22 +229,19 @@ function setupReaderControls() {
     });
     dom.wpmInput?.addEventListener("input", () => {
         const newWpm = parseInt(dom.wpmInput.value, 10);
-        updateTextStats(); // Update stats display
-        scheduleSave(); // Save the new WPM value
-        updateReadingSpeed(newWpm); // Update the reader speed
+        updateTextStats();
+        scheduleSave();
+        updateReadingSpeed(newWpm);
     });
     dom.fixationToggle?.addEventListener("change", () => {
         readerState.isFixationPointEnabled = dom.fixationToggle.checked;
         scheduleSave();
     });
-
-    // Event listeners for font controls
     dom.fontFamilySelector?.addEventListener('change', (e) => {
         appState.fontFamily = e.target.value;
         applyReaderStyles(appState.fontFamily, appState.fontSize);
         scheduleSave();
     });
-
     dom.fontSizeSlider?.addEventListener('input', (e) => {
         const newSize = e.target.value;
         appState.fontSize = newSize;
@@ -382,7 +319,6 @@ function setupAuthEventListeners() {
 
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
-
     dom.darkModeToggle?.addEventListener("click", () => {
         const isDark = !document.documentElement.classList.contains('dark');
         const currentTheme = dom.themeSelector?.value || 'blue';
@@ -390,14 +326,12 @@ function setupGeneralEventListeners() {
         applyTheme(currentTheme, isDark);
         scheduleSave();
     });
-
     dom.themeSelector?.addEventListener('change', (e) => {
         const newTheme = e.target.value;
         const isDark = document.documentElement.classList.contains('dark');
         applyTheme(newTheme, isDark);
         scheduleSave();
     });
-
     dom.languageSelector?.addEventListener("change", (event) => {
         setLanguage(event.target.value);
         scheduleSave();

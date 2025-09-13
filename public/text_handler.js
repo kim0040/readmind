@@ -109,12 +109,9 @@ export async function updateTextStats() {
 }
 
 function updateDetailedStats(text) {
-    // textReadability is loaded from the unpkg CDN script in index.html
     if (typeof textReadability === 'undefined') {
-        console.error("text-readability library not loaded.");
-        return;
+        return; // Library not loaded
     }
-
     if (!text || text.trim() === "") {
         if (dom.readabilityScore) dom.readabilityScore.textContent = "-";
         if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "-";
@@ -122,39 +119,20 @@ function updateDetailedStats(text) {
         if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = "-";
         return;
     }
-
     try {
-        if (dom.readabilityScore) {
-            dom.readabilityScore.textContent = textReadability.fleschKincaidGrade(text).toFixed(1);
-        }
+        if (dom.readabilityScore) dom.readabilityScore.textContent = textReadability.fleschKincaidGrade(text).toFixed(1);
+        const wordCount = textReadability.lexiconCount(text);
+        const sentenceCount = textReadability.sentenceCount(text);
         if (dom.avgSentenceLength) {
-            const wordCount = textReadability.lexiconCount(text);
-            const sentenceCount = textReadability.sentenceCount(text);
-            if (sentenceCount > 0) {
-                dom.avgSentenceLength.textContent = (wordCount / sentenceCount).toFixed(1);
-            } else {
-                dom.avgSentenceLength.textContent = wordCount > 0 ? wordCount.toFixed(1) : "-";
-            }
+            dom.avgSentenceLength.textContent = sentenceCount > 0 ? (wordCount / sentenceCount).toFixed(1) : (wordCount > 0 ? wordCount.toFixed(1) : "-");
         }
-        if (dom.syllableCount) {
-            dom.syllableCount.textContent = textReadability.syllableCount(text);
-        }
+        if (dom.syllableCount) dom.syllableCount.textContent = textReadability.syllableCount(text);
         if (dom.lexicalDiversity) {
-            const wordCount = textReadability.lexiconCount(text);
             const uniqueWords = [...new Set(text.toLowerCase().match(/\b\w+\b/g) || [])].length;
-            if (wordCount > 0) {
-                const diversity = (uniqueWords / wordCount) * 100;
-                dom.lexicalDiversity.textContent = diversity.toFixed(1) + '%';
-            } else {
-                dom.lexicalDiversity.textContent = "-";
-            }
+            dom.lexicalDiversity.textContent = wordCount > 0 ? ((uniqueWords / wordCount) * 100).toFixed(1) + '%' : "-";
         }
     } catch (error) {
         console.error("Error calculating detailed stats:", error);
-        if (dom.readabilityScore) dom.readabilityScore.textContent = "N/A";
-        if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "N/A";
-        if (dom.syllableCount) dom.syllableCount.textContent = "N/A";
-        if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = "N/A";
     }
 }
 
