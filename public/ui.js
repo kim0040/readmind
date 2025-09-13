@@ -131,6 +131,13 @@ export function showConfirmationModal(titleKey, messageKey, onConfirm) {
     overlay.classList.remove('hidden');
 }
 
+export function applyReaderStyles(fontFamily, fontSize) {
+    if (dom.currentWordDisplay) {
+        dom.currentWordDisplay.style.fontFamily = fontFamily;
+        dom.currentWordDisplay.style.fontSize = `${fontSize}px`;
+    }
+}
+
 export function updateAuthUI() {
     const isLoggedIn = auth.isLoggedIn();
     dom.loginButton?.classList.toggle('hidden', isLoggedIn);
