@@ -1,21 +1,26 @@
-// state.js - Shared application state
+// state.js - Shared application state, modularized by feature.
 
-export const state = {
-    // Constants
-    APP_VERSION: "1.0.11",
-    LS_KEYS: {
-        LANGUAGE: "readMindLanguage",
-        THEME: "theme",
-        USER_THEME_PREFERENCE: "userThemePreference",
-        FIXATION_ENABLED: "fixationPointEnabled",
-        WPM: "wpm",
-        TEXT: "readMindText",
-        INDEX: "readMindIndex",
-    },
-    NO_SPACE_LANGUAGES: ["ja", "zh"],
-    CONTACT_EMAIL: "hun1234kim@gmail.com",
+// --- Constants ---
+export const LS_KEYS = {
+    SETTINGS: "readMindSettings_v2", // Combined settings key
+    INDEX: "readMindIndex",
+};
 
-    // State variables
+export const CONTACT_EMAIL = "hun1234kim@gmail.com";
+export const APP_VERSION = "2.0.0";
+
+// --- Application State ---
+// For general app settings like theme, language, etc.
+export const appState = {
+    currentLanguage: "ko",
+    userHasManuallySetTheme: false,
+    originalPlaceholderText: "",
+    encoder: new TextEncoder(),
+};
+
+// --- Reader State ---
+// For state directly related to the speed reading engine.
+export const readerState = {
     words: [],
     currentIndex: 0,
     intervalId: null,
@@ -23,12 +28,14 @@ export const state = {
     isPaused: false,
     startDelayTimeoutId: null,
     isFixationPointEnabled: false,
-    currentLanguage: "ko",
-    userHasManuallySetTheme: false,
-    originalPlaceholderText: "",
-    encoder: new TextEncoder(),
     chunkSize: 1,
     readingMode: 'flash', // 'flash' or 'teleprompter'
+    NO_SPACE_LANGUAGES: ["ja", "zh"],
+};
+
+// --- Document & Editor State ---
+// For state related to document management and the editor.
+export const documentState = {
     simplemde: null, // To hold the SimpleMDE instance
     activeDocument: null, // To hold the currently active document object
 };
