@@ -3,7 +3,7 @@
 import * as auth from './auth.js';
 import { appState, readerState, documentState } from "./state.js";
 import { handleSuccessfulLogin, handleLogout, scheduleSave } from "./main.js";
-import { pauseReading, startReadingFlow } from "./reader.js";
+import { pauseReading, startReadingFlow, updateReadingSpeed } from "./reader.js";
 import { updateTextStats, handleTextChange } from "./text_handler.js";
 
 export const dom = {
@@ -254,13 +254,11 @@ function setupReaderControls() {
         scheduleSave();
     });
     dom.wpmInput?.addEventListener("input", () => {
-        readerState.currentWpm = parseInt(dom.wpmInput.value, 10);
+        const newWpm = parseInt(dom.wpmInput.value, 10);
+        readerState.currentWpm = newWpm; // Update state immediately
         updateTextStats();
         scheduleSave();
-        if (readerState.intervalId) {
-            clearInterval(readerState.intervalId);
-            readerState.intervalId = setInterval(displayNextWord, 60000 / readerState.currentWpm);
-        }
+        updateReadingSpeed(newWpm);
     });
     dom.fixationToggle?.addEventListener("change", () => {
         readerState.isFixationPointEnabled = dom.fixationToggle.checked;
