@@ -61,7 +61,7 @@ function displayNextWord() {
             } else {
                 unitLabel = getTranslation("wordsLabel");
             }
-            dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, "en", { unit: unitLabel, current: readerState.currentIndex, total: readerState.words.length });
+            dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, { unit: unitLabel, current: readerState.currentIndex, total: readerState.words.length });
         }
         updateProgressBar();
     } else {
