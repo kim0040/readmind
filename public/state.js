@@ -4,6 +4,7 @@
 export const LS_KEYS = {
     SETTINGS: "readMindSettings_v2", // Combined settings key
     INDEX: "readMindIndex",
+    LAST_DOC_ID: "readMindLastDocId",
 };
 
 export const CONTACT_EMAIL = "hun1234kim@gmail.com";

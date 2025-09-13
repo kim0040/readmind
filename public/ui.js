@@ -30,6 +30,7 @@ export const dom = {
     authForm: document.getElementById("auth-form"),
     authSubmitButton: document.getElementById("auth-submit-button"),
     authSwitchButton: document.getElementById("auth-switch-button"),
+    authSwitchText: document.getElementById("auth-switch-text"),
     emailInput: document.getElementById("email"),
     passwordInput: document.getElementById("password"),
     documentSidebar: document.getElementById("document-sidebar"),
@@ -38,6 +39,14 @@ export const dom = {
     loginButton: document.getElementById("login-button"),
     logoutButton: document.getElementById("logout-button"),
     authStatus: document.getElementById("auth-status"),
+    hamburgerMenuButton: document.getElementById("hamburger-menu-button"),
+    closeSidebarButton: document.getElementById("close-sidebar-button"),
+    sidebarOverlay: document.getElementById("sidebar-overlay"),
+    confirmationModalOverlay: document.getElementById("confirmation-modal-overlay"),
+    confirmationModalTitle: document.getElementById("confirmation-modal-title"),
+    confirmationModalMessage: document.getElementById("confirmation-modal-message"),
+    confirmationModalConfirmButton: document.getElementById("confirmation-modal-confirm-button"),
+    confirmationModalCancelButton: document.getElementById("confirmation-modal-cancel-button"),
 };
 
 function openAuthModal(isLogin = true) {
@@ -48,9 +57,13 @@ function openAuthModal(isLogin = true) {
     if (isLogin) {
         dom.authModalTitle.dataset.langKey = "loginTitle";
         dom.authSubmitButton.dataset.langKey = "loginButton";
+        dom.authSwitchText.dataset.langKey = "signupPrompt";
+        dom.authSwitchButton.dataset.langKey = "signupLink";
     } else {
         dom.authModalTitle.dataset.langKey = "signupTitle";
         dom.authSubmitButton.dataset.langKey = "signupButton";
+        dom.authSwitchText.dataset.langKey = "loginPrompt";
+        dom.authSwitchButton.dataset.langKey = "loginLink";
     }
     setLanguage(appState.currentLanguage, true);
     dom.authModalOverlay.classList.remove('hidden');
@@ -65,6 +78,56 @@ function closeAuthModal() {
         dom.authModalOverlay.classList.add('hidden');
         dom.authModalOverlay.style.display = 'none';
     }, 300);
+}
+
+function closeConfirmationModal() {
+    if (!dom.confirmationModalOverlay) return;
+    dom.confirmationModalOverlay.classList.add('hidden');
+}
+
+export function showConfirmationModal(titleKey, messageKey, onConfirm) {
+    if (!dom.confirmationModalOverlay) return;
+
+    dom.confirmationModalTitle.textContent = getTranslation(titleKey);
+    dom.confirmationModalMessage.textContent = getTranslation(messageKey);
+    dom.confirmationModalConfirmButton.textContent = getTranslation('confirmButton');
+    dom.confirmationModalCancelButton.textContent = getTranslation('cancelButton');
+
+    dom.confirmationModalOverlay.classList.remove('hidden');
+
+    // Use a variable to ensure cleanup happens only once
+    let isHandled = false;
+
+    const confirmHandler = () => {
+        if (isHandled) return;
+        isHandled = true;
+        onConfirm();
+        closeConfirmationModal();
+        cleanup();
+    };
+
+    const cancelHandler = () => {
+        if (isHandled) return;
+        isHandled = true;
+        closeConfirmationModal();
+        cleanup();
+    };
+
+    const overlayClickHandler = (e) => {
+        if (e.target === dom.confirmationModalOverlay) {
+            cancelHandler();
+        }
+    };
+
+    const cleanup = () => {
+        dom.confirmationModalConfirmButton.removeEventListener('click', confirmHandler);
+        dom.confirmationModalCancelButton.removeEventListener('click', cancelHandler);
+        dom.confirmationModalOverlay.removeEventListener('click', overlayClickHandler);
+    };
+
+    dom.confirmationModalConfirmButton.addEventListener('click', confirmHandler);
+    dom.confirmationModalCancelButton.addEventListener('click', cancelHandler);
+    dom.confirmationModalOverlay.addEventListener('click', overlayClickHandler);
 }
 
 export function updateAuthUI() {
@@ -203,10 +266,14 @@ function setupAuthEventListeners() {
                 handleSuccessfulLogin();
                 closeAuthModal();
             } else {
-                throw new Error(response.message || 'Authentication failed');
+                // This else block might not be necessary if server always returns error status for failures.
+                // However, as a fallback, we can handle it.
+                throw new Error('Unknown authentication error');
             }
         } catch (error) {
-            showMessage(error.message, "error");
+            grecaptcha.reset();
+            const errorCode = error.response?.data?.error_code || 'UNKNOWN';
+            showMessage(`error_${errorCode}`, 'error');
         } finally {
             dom.authSubmitButton.disabled = false;
         }
@@ -227,9 +294,28 @@ function setupGeneralEventListeners() {
     });
 }
 
+function setupSidebarEventListeners() {
+    if (!dom.hamburgerMenuButton) return;
+
+    const openSidebar = () => {
+        dom.documentSidebar.classList.remove('-translate-x-full');
+        dom.sidebarOverlay.classList.remove('hidden');
+    };
+
+    const closeSidebar = () => {
+        dom.documentSidebar.classList.add('-translate-x-full');
+        dom.sidebarOverlay.classList.add('hidden');
+    };
+
+    dom.hamburgerMenuButton.addEventListener('click', openSidebar);
+    dom.closeSidebarButton.addEventListener('click', closeSidebar);
+    dom.sidebarOverlay.addEventListener('click', closeSidebar);
+}
+
 export function attachEventListeners() {
     setupReaderControls();
     setupActionButtons();
     setupAuthEventListeners();
     setupGeneralEventListeners();
+    setupSidebarEventListeners();
 }
