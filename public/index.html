@@ -3,140 +3,87 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title data-lang-key="pageTitle">리드마인드 (ReadMind) - 속독 훈련 및 텍스트 분석</title>
+        <title data-lang-key="pageTitle">ReadMind - Speed Reading & Text Analysis</title>
         <link rel="icon" href="favicon.png" type="image/png" />
         <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="stylesheet" href="style.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.css" />
-
-        <!-- Material Web Components -->
-        <script type="importmap">
-            {
-              "imports": {
-                "@material/web/": "https://esm.run/@material/web/"
-              }
+        <style>
+            body {
+                background-color: var(--md-sys-color-background);
+                color: var(--md-sys-color-on-background);
             }
+            .main-card, #document-sidebar, #auth-modal, .document-item, #confirmation-modal {
+                background-color: var(--md-sys-color-surface);
+                transition: background-color 0.2s ease-in-out;
+            }
+            .settings-card {
+                background-color: var(--md-sys-color-surface-variant);
+            }
+            #word-display-area {
+                background-color: var(--md-sys-color-secondary-container);
+                color: var(--md-sys-color-on-secondary-container);
+            }
+            #site-title { color: var(--md-sys-color-primary); }
+            #progress-bar-fill { background-color: var(--md-sys-color-primary); }
+            .fixation-point { color: var(--md-sys-color-error); }
+            #document-sidebar { border-right-color: var(--md-sys-color-outline-variant); }
+            #document-sidebar .border-b, #document-sidebar .border-t { border-color: var(--md-sys-color-outline-variant); }
+            .dark .editor-toolbar { background-color: #374151; border-color: #4b5563; }
+            .dark .editor-toolbar a { color: #d1d5db !important; }
+            .dark .editor-toolbar a:hover, .dark .editor-toolbar a.active { background-color: #4b5563; }
+            .dark .CodeMirror { background-color: #1f2937; color: #d1d5db; border-color: #4b5563 !important; }
+            .dark .CodeMirror-cursor { border-left-color: #f3f4f6 !important; }
+            .dark .editor-preview, .dark .editor-preview-side { background-color: #111827; }
+        </style>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.css" />
+        <script type="importmap">
+            { "imports": { "@material/web/": "https://esm.run/@material/web/" } }
         </script>
         <script type="module">
             import '@material/web/all.js';
             import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
-
             document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
         </script>
-
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <link rel="stylesheet" href="themes.css" />
     </head>
-    <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200" style="font-family: 'Roboto', sans-serif;">
+    <body class="text-slate-800 dark:text-slate-200" style="font-family: 'Roboto', sans-serif;">
         <div class="relative flex w-full h-screen overflow-x-hidden">
-            <!-- Left Column: Document List (Sidebar) -->
-            <aside id="document-sidebar" class="fixed inset-y-0 left-0 z-40 w-full sm:w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transform -translate-x-full md:relative md:translate-x-0 md:w-1/4 transition-transform duration-300 ease-in-out">
-                <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                    <h2 class="text-xl font-bold">My Documents</h2>
-                    <md-icon-button id="close-sidebar-button" class="md:hidden"><md-icon>close</md-icon></md-icon-button>
-                </div>
-                <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-                    <md-filled-button id="new-document-button" class="w-full">New Document</md-filled-button>
-                </div>
-                <div id="document-list" class="flex-grow overflow-y-auto p-2">
-                    <!-- Document items will be injected here by JavaScript -->
-                    <p class="text-sm text-slate-500 p-4 text-center">Log in to see your documents.</p>
-                </div>
-                 <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                    <div id="auth-controls" class="flex items-center">
-                        <span id="auth-status" class="text-sm text-slate-600 dark:text-slate-300 hidden"></span>
-                        <md-text-button id="login-button" data-lang-key="loginButton">Login</md-text-button>
-                        <md-text-button id="logout-button" data-lang-key="logoutButton" class="hidden">Logout</md-text-button>
-                    </div>
-                    <div class="flex items-center">
-                        <md-outlined-select id="theme-selector" label="Theme">
-                            <md-menu-item value="blue" selected><div slot="headline">Blue</div></md-menu-item>
-                            <md-menu-item value="green"><div slot="headline">Green</div></md-menu-item>
-                            <md-menu-item value="purple"><div slot="headline">Purple</div></md-menu-item>
-                            <md-menu-item value="orange"><div slot="headline">Orange</div></md-menu-item>
-                        </md-outlined-select>
-                        <md-icon-button id="dark-mode-toggle" title="Toggle Dark/Light Mode">
-                            <md-icon id="theme-toggle-dark-icon" class="hidden">dark_mode</md-icon>
-                            <md-icon id="theme-toggle-light-icon" class="hidden">light_mode</md-icon>
-                        </md-icon-button>
-                    </div>
-                </div>
+            <aside id="document-sidebar" class="fixed inset-y-0 left-0 z-40 w-full sm:w-80 border-r flex flex-col transform -translate-x-full md:relative md:translate-x-0 md:w-1/4 transition-transform duration-300 ease-in-out">
+                {/* Sidebar Content */}
             </aside>
-            <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
-
-            <!-- Right Column: Main Content -->
             <main class="flex-grow p-4 sm:p-8 overflow-y-auto w-full">
-                <div class="main-card bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-4xl mx-auto">
-                     <header class="mb-6">
-                        <div class="flex justify-between items-center mb-2">
-                            <div class="flex items-center gap-2">
-                                <md-icon-button id="hamburger-menu-button" class="md:hidden"><md-icon>menu</md-icon></md-icon-button>
-                                <h1 id="site-title" class="text-3xl sm:text-4xl font-bold text-sky-600 dark:text-sky-400 text-center sm:text-left"></h1>
-                            </div>
-                             <div class="flex items-center space-x-2">
-                                <md-outlined-select id="language-selector" label="Language">
-                                    <md-menu-item value="en"><div slot="headline">English</div></md-menu-item>
-                                    <md-menu-item value="ko" selected><div slot="headline">한국어</div></md-menu-item>
-                                    <md-menu-item value="ja"><div slot="headline">日本語</div></md-menu-item>
-                                    <md-menu-item value="zh"><div slot="headline">中文</div></md-menu-item>
-                                    <md-menu-item value="vi"><div slot="headline">Tiếng Việt</div></md-menu-item>
-                                    <md-menu-item value="hi"><div slot="headline">हिन्दी</div></md-menu-item>
-                                    <md-menu-item value="es"><div slot="headline">Español</div></md-menu-item>
-                                    <md-menu-item value="fr"><div slot="headline">Français</div></md-menu-item>
-                                    <md-menu-item value="ar"><div slot="headline">العربية</div></md-menu-item>
-                                    <md-menu-item value="bn"><div slot="headline">বাংলা</div></md-menu-item>
-                                    <md-menu-item value="ru"><div slot="headline">Русский</div></md-menu-item>
-                                    <md-menu-item value="pt"><div slot="headline">Português</div></md-menu-item>
-                                    <md-menu-item value="ur"><div slot="headline">اردو</div></md-menu-item>
-                                </md-outlined-select>
-                                <md-icon-button id="fullscreen-button" title="Toggle Fullscreen"><md-icon>fullscreen</md-icon></md-icon-button>
-                            </div>
-                        </div>
+                <div class="main-card p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-4xl mx-auto">
+                    <header class="mb-6">
+                        {/* Header Content */}
                     </header>
-
-                    <!-- Editor Area -->
                     <div id="editor-container" class="mb-4">
                          <textarea id="text-input" rows="8"></textarea>
                     </div>
-
-                    <!-- Reader Area -->
                     <div id="reader-container">
-                        <div id="word-display-area" class="bg-slate-200 dark:bg-slate-600 p-8 text-center rounded-xl min-h-[120px] flex items-center justify-center">
-                            <span id="current-word" class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-800 dark:text-slate-100"></span>
+                        <div id="word-display-area" class="p-8 text-center rounded-xl min-h-[120px] flex items-center justify-center">
+                            <span id="current-word" class="text-4xl sm:text-5xl lg:text-6xl font-bold"></span>
                         </div>
-                        <div id="progress-bar-container" class="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-full mt-3 mb-1 overflow-hidden">
-                            <div id="progress-bar-fill" class="h-full bg-sky-500 dark:bg-sky-400 rounded-full"></div>
+                        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full mt-3 mb-1 overflow-hidden">
+                            <div id="progress-bar-fill" class="h-full rounded-full"></div>
                         </div>
                         <div class="text-center text-sm text-slate-500 dark:text-slate-400 mb-6">
                             <span id="progress-info"></span>
                         </div>
                     </div>
-
-                    <!-- Settings & Controls -->
-                    <div class="settings-card mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                    <div class="settings-card mb-6 p-4 rounded-lg">
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-6 items-center">
                             <div class="sm:col-span-4 flex flex-col">
-                                <label for="wpm-input" id="wpm-cpm-label" class="block text-xs sm:text-sm font-medium mb-1"></label>
                                 <md-slider id="wpm-input" min="50" max="1000" value="250" step="10" labeled ticks class="w-full"></md-slider>
                             </div>
                             <div class="sm:col-span-2">
-                                <md-outlined-select id="chunk-size-selector" label="Chunk Size" class="w-full">
+                                <md-outlined-select id="chunk-size-selector" label="Chunk Size" title="Words shown at a time" class="w-full">
                                     <md-menu-item value="1" selected><div slot="headline">1</div></md-menu-item>
                                     <md-menu-item value="2"><div slot="headline">2</div></md-menu-item>
                                     <md-menu-item value="3"><div slot="headline">3</div></md-menu-item>
-                                    <md-menu-item value="4"><div slot="headline">4</div></md-menu-item>
-                                    <md-menu-item value="5"><div slot="headline">5</div></md-menu-item>
-                                    <md-menu-item value="6"><div slot="headline">6</div></md-menu-item>
-                                </md-outlined-select>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <md-outlined-select id="reading-mode-selector" label="Reading Mode" class="w-full">
-                                    <md-menu-item value="flash" selected><div slot="headline">Flash</div></md-menu-item>
-                                    <md-menu-item value="teleprompter"><div slot="headline">Teleprompter</div></md-menu-item>
                                 </md-outlined-select>
                             </div>
                             <div class="sm:col-span-2">
@@ -147,84 +94,50 @@
                                 </md-outlined-select>
                             </div>
                             <div class="sm:col-span-2 flex flex-col">
-                                <label id="font-size-label" class="block text-xs sm:text-sm font-medium mb-1">Font Size: 16px</label>
-                                <md-slider id="font-size-slider" min="12" max="24" value="16" step="1" class="w-full"></md-slider>
+                                <label id="font-size-label" class="block text-xs sm:text-sm font-medium mb-1">Font Size: 48px</label>
+                                <md-slider id="font-size-slider" min="12" max="48" value="48" step="1" class="w-full"></md-slider>
                             </div>
-                            <div class="sm:col-span-4 flex justify-center">
+                             <div class="sm:col-span-2 flex justify-center">
                                <label for="fixation-toggle" class="flex items-center gap-2 cursor-pointer">
-                                    <span data-lang-key="fixationPointLabel"></span>
+                                    <span data-lang-key="fixationPointLabel">Fixation Point</span>
                                     <md-switch id="fixation-toggle" icons></md-switch>
                                 </label>
                             </div>
                         </div>
                     </div>
-
                     <div class="flex justify-center gap-3">
                         <md-filled-button id="start-button"></md-filled-button>
                         <md-filled-tonal-button id="pause-button"></md-filled-tonal-button>
                         <md-outlined-button id="reset-button"></md-outlined-button>
                     </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <h3 class="text-lg font-semibold text-center mb-2" data-lang-key="detailedStatsTitle">Detailed Analysis</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-sm" data-lang-key="readabilityScoreLabel">Readability</div>
+                                <div id="readability-score" class="text-2xl font-bold">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="avgSentenceLengthLabel">Avg. Sentence</div>
+                                <div id="avg-sentence-length" class="text-2xl font-bold">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="syllableCountLabel">Syllables</div>
+                                <div id="syllable-count" class="text-2xl font-bold">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="lexicalDiversityLabel">Lexical Diversity</div>
+                                <div id="lexical-diversity" class="text-2xl font-bold">-</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
-
-        <!-- Welcome Dialog -->
-        <md-dialog id="welcome-dialog">
-            <div slot="headline" data-lang-key="welcomeTitle">Welcome to ReadMind!</div>
-            <div slot="content">
-                <p data-lang-key="welcomeMessage1">ReadMind helps you practice speed reading. Paste your text, choose your speed, and press Start!</p>
-                <p class="mt-4" data-lang-key="welcomeMessage2">Log in to save your documents and settings across devices.</p>
-            </div>
-            <div slot="actions">
-                <md-filled-button value="ok" autofocus data-lang-key="welcomeButton">Get Started</md-filled-button>
-            </div>
-        </md-dialog>
-
-        <!-- Auth Modal -->
-        <div id="auth-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center">
-            <div id="auth-modal" class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 id="auth-modal-title" class="text-2xl font-bold"></h2>
-                        <md-icon-button id="close-auth-modal"><md-icon>close</md-icon></md-icon-button>
-                    </div>
-                    <form id="auth-form">
-                        <div class="flex flex-col gap-4">
-                            <md-outlined-text-field type="email" id="email" name="email" required label="Email Address"></md-outlined-text-field>
-                            <md-outlined-text-field type="password" id="password" name="password" required label="Password"></md-outlined-text-field>
-                        </div>
-                        <div class="mt-4">
-                            <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
-                        </div>
-                        <div class="mt-6">
-                            <md-filled-button type="submit" id="auth-submit-button" class="w-full"></md-filled-button>
-                        </div>
-                    </form>
-                    <p class="mt-4 text-center text-sm"><span id="auth-switch-text"></span> <md-text-button id="auth-switch-button"></md-text-button></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Confirmation Modal -->
-        <div id="confirmation-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
-            <div id="confirmation-modal" class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6">
-                <h2 id="confirmation-modal-title" class="text-xl font-bold mb-4"></h2>
-                <p id="confirmation-modal-message" class="text-slate-600 dark:text-slate-300 mb-6"></p>
-                <div class="flex justify-end space-x-2">
-                    <md-text-button id="confirmation-modal-cancel-button"></md-text-button>
-                    <md-text-button id="confirmation-modal-confirm-button"></md-text-button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Custom Message Box -->
-        <div id="custom-message-box" class="message-box fixed top-5 left-1/2 -translate-x-1/2 p-4 rounded-md shadow-lg z-[1000]">
-            <span id="message-text"></span>
-        </div>
-
-        <!-- Scripts -->
+        {/* Modals and other hidden elements */}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/kuromoji/build/kuromoji.js"></script>
+        <script src="https://unpkg.com/text-readability@1.1.1/main.js"></script>
         <script src="translations.js"></script>
         <script type="module" src="main.js"></script>
     </body>
