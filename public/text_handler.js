@@ -109,6 +109,12 @@ export async function updateTextStats() {
 }
 
 function updateDetailedStats(text) {
+    // textReadability is loaded from the unpkg CDN script in index.html
+    if (typeof textReadability === 'undefined') {
+        console.error("text-readability library not loaded.");
+        return;
+    }
+
     if (!text || text.trim() === "") {
         if (dom.readabilityScore) dom.readabilityScore.textContent = "-";
         if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "-";
@@ -118,14 +124,12 @@ function updateDetailedStats(text) {
     }
 
     try {
-        const analysis = textifyer(text);
-
         if (dom.readabilityScore) {
-            dom.readabilityScore.textContent = analysis.getFleschKincaidGrade().toFixed(1);
+            dom.readabilityScore.textContent = textReadability.fleschKincaidGrade(text).toFixed(1);
         }
         if (dom.avgSentenceLength) {
-            const wordCount = analysis.getWordCount();
-            const sentenceCount = analysis.getSentenceCount();
+            const wordCount = textReadability.lexiconCount(text);
+            const sentenceCount = textReadability.sentenceCount(text);
             if (sentenceCount > 0) {
                 dom.avgSentenceLength.textContent = (wordCount / sentenceCount).toFixed(1);
             } else {
@@ -133,10 +137,17 @@ function updateDetailedStats(text) {
             }
         }
         if (dom.syllableCount) {
-            dom.syllableCount.textContent = analysis.getSyllableCount();
+            dom.syllableCount.textContent = textReadability.syllableCount(text);
         }
         if (dom.lexicalDiversity) {
-            dom.lexicalDiversity.textContent = (analysis.getLexicalDiversity() * 100).toFixed(1) + '%';
+            const wordCount = textReadability.lexiconCount(text);
+            const uniqueWords = [...new Set(text.toLowerCase().match(/\b\w+\b/g) || [])].length;
+            if (wordCount > 0) {
+                const diversity = (uniqueWords / wordCount) * 100;
+                dom.lexicalDiversity.textContent = diversity.toFixed(1) + '%';
+            } else {
+                dom.lexicalDiversity.textContent = "-";
+            }
         }
     } catch (error) {
         console.error("Error calculating detailed stats:", error);
