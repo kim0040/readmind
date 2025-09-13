@@ -6,19 +6,29 @@ const captchaVerification = require('../middleware/captcha_verification');
 
 const router = express.Router();
 
+const validatePassword = (password) => {
+    // Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+    return passwordRegex.test(password);
+};
+
 // Signup endpoint
 router.post('/signup', captchaVerification, async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required.' });
+        return res.status(400).json({ error_code: 'EMAIL_PASSWORD_REQUIRED' });
+    }
+
+    if (!validatePassword(password)) {
+        return res.status(400).json({ error_code: 'WEAK_PASSWORD' });
     }
 
     try {
         const db = getDb();
         const existingUser = await db.get('SELECT * FROM users WHERE email = ?', email);
         if (existingUser) {
-            return res.status(409).json({ message: 'Email already in use.' });
+            return res.status(409).json({ error_code: 'EMAIL_IN_USE' });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
@@ -42,7 +52,7 @@ router.post('/signup', captchaVerification, async (req, res) => {
         });
     } catch (err) {
         console.error('Signup error:', err.message);
-        res.status(500).json({ message: 'Server error during signup.' });
+        res.status(500).json({ error_code: 'SERVER_ERROR_SIGNUP' });
     }
 });
 
@@ -51,7 +61,7 @@ router.post('/login', captchaVerification, async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required.' });
+        return res.status(400).json({ error_code: 'EMAIL_PASSWORD_REQUIRED' });
     }
 
     try {
@@ -59,13 +69,13 @@ router.post('/login', captchaVerification, async (req, res) => {
         const user = await db.get('SELECT * FROM users WHERE email = ?', email);
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
+            return res.status(401).json({ error_code: 'INVALID_CREDENTIALS' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
 
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
+            return res.status(401).json({ error_code: 'INVALID_CREDENTIALS' });
         }
 
         // Generate JWT
@@ -81,7 +91,7 @@ router.post('/login', captchaVerification, async (req, res) => {
         });
     } catch (err) {
         console.error('Login error:', err.message);
-        res.status(500).json({ message: 'Server error during login.' });
+        res.status(500).json({ error_code: 'SERVER_ERROR_LOGIN' });
     }
 });
 

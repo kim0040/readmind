@@ -4,7 +4,7 @@ import { appState, readerState, documentState, LS_KEYS } from './state.js';
 import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage } from './ui.js';
 import { updateTextStats } from './text_handler.js';
 import { formatWordWithFixation, updateProgressBar } from './reader.js';
-import { renderDocumentList, attachDocumentEventListeners } from './document_manager.js';
+import { renderDocumentList, attachDocumentEventListeners, loadDocument } from './document_manager.js';
 
 // --- Settings Management ---
 
@@ -90,6 +90,24 @@ export async function handleSuccessfulLogin() {
     await renderDocumentList();
     setLanguage(appState.currentLanguage, true);
     updateTextStats();
+
+    // Restore last opened document
+    const lastDocId = localStorage.getItem(LS_KEYS.LAST_DOC_ID);
+    if (lastDocId) {
+        // Check if the document element exists in the newly rendered list
+        const docElement = dom.documentList.querySelector(`.document-item[data-id="${lastDocId}"]`);
+        if (docElement) {
+            try {
+                const documentToLoad = await auth.getDocument(lastDocId);
+                if (documentToLoad) {
+                    loadDocument(documentToLoad);
+                }
+            } catch (error) {
+                console.error("Failed to load last opened document:", error);
+                localStorage.removeItem(LS_KEYS.LAST_DOC_ID); // Clean up if doc is invalid
+            }
+        }
+    }
 }
 
 export function handleLogout() {
@@ -102,45 +120,51 @@ export function handleLogout() {
 }
 
 async function initializeApp() {
-    updateAuthUI();
-    await loadAndApplySettings();
-    await renderDocumentList();
+    try {
+        updateAuthUI();
+        await loadAndApplySettings();
+        await renderDocumentList();
 
-    if (document.getElementById("text-input")) {
-        documentState.simplemde = new SimpleMDE({
-            element: document.getElementById("text-input"),
-            spellChecker: false,
-            autosave: { enabled: false, uniqueId: "ReadMindContent" },
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
-        });
+        if (document.getElementById("text-input")) {
+            documentState.simplemde = new SimpleMDE({
+                element: document.getElementById("text-input"),
+                spellChecker: false,
+                autosave: { enabled: false, uniqueId: "ReadMindContent" },
+                toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
+            });
 
-        if (dom.textInput.value) {
-            documentState.simplemde.value(dom.textInput.value);
+            if (dom.textInput.value) {
+                documentState.simplemde.value(dom.textInput.value);
+            }
         }
-    }
 
-    updateTextStats();
-    setLanguage(appState.currentLanguage, true);
+        updateTextStats();
+        setLanguage(appState.currentLanguage, true);
 
-    let initialState = "initial";
-    const savedIndex = parseInt(localStorage.getItem(LS_KEYS.INDEX) || "0", 10);
+        let initialState = "initial";
+        const savedIndex = parseInt(localStorage.getItem(LS_KEYS.INDEX) || "0", 10);
 
-    if (dom.textInput && dom.textInput.value.trim() !== "") {
-        if (readerState.words && readerState.words.length > 0 && savedIndex > 0 && savedIndex < readerState.words.length) {
-            readerState.currentIndex = savedIndex;
-            readerState.isPaused = true;
-            initialState = "paused";
+        if (dom.textInput && dom.textInput.value.trim() !== "") {
+            if (readerState.words && readerState.words.length > 0 && savedIndex > 0 && savedIndex < readerState.words.length) {
+                readerState.currentIndex = savedIndex;
+                readerState.isPaused = true;
+                initialState = "paused";
+            } else {
+                initialState = "initial";
+            }
         } else {
-            initialState = "initial";
+            initialState = "empty";
         }
-    } else {
-        initialState = "empty";
-    }
 
-    updateButtonStates(initialState);
-    updateProgressBar();
-    attachEventListeners();
-    attachDocumentEventListeners();
+        updateButtonStates(initialState);
+        updateProgressBar();
+    } catch (error) {
+        console.error("Error during app initialization:", error);
+        // Even if initialization fails, we must attach event listeners so the user can try to log in, etc.
+    } finally {
+        attachEventListeners();
+        attachDocumentEventListeners();
+    }
 }
 
 document.addEventListener("DOMContentLoaded", initializeApp);

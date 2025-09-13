@@ -1,6 +1,6 @@
 import * as auth from './auth.js';
-import { dom, showMessage, getTranslation } from './ui.js';
-import { documentState } from './state.js';
+import { dom, showMessage, getTranslation, showConfirmationModal } from './ui.js';
+import { documentState, LS_KEYS } from './state.js';
 import { handleTextChange } from './text_handler.js';
 import { debounce } from './utils.js';
 
@@ -10,8 +10,9 @@ let saveTimeout;
  * Loads a document into the editor.
  * @param {object} doc The document object to load.
  */
-function loadDocument(doc) {
+export function loadDocument(doc) {
     documentState.activeDocument = doc;
+    localStorage.setItem(LS_KEYS.LAST_DOC_ID, doc.id);
     if (documentState.simplemde) {
         documentState.simplemde.value(doc.content);
     }
@@ -111,19 +112,21 @@ export function attachDocumentEventListeners() {
         if (deleteButton) {
             e.stopPropagation();
             const docId = deleteButton.dataset.id;
-            if (confirm('Are you sure you want to delete this document?')) {
+            showConfirmationModal('confirmDeleteDocTitle', 'confirmDeleteDocMessage', async () => {
                 try {
                     await auth.deleteDocument(docId);
                     showMessage('msgDocDeleted', 'success');
                     if (documentState.activeDocument && documentState.activeDocument.id == docId) {
                         documentState.activeDocument = null;
-                        documentState.simplemde.value('');
+                        if (documentState.simplemde) {
+                            documentState.simplemde.value('');
+                        }
                     }
-                    renderDocumentList();
+                    await renderDocumentList();
                 } catch (error) {
                     showMessage('msgDocDeleteError', 'error');
                 }
-            }
+            });
         } else if (docElement) {
             const docId = docElement.dataset.id;
             try {
