@@ -36,10 +36,14 @@ export const dom = {
     darkModeToggle: document.getElementById("dark-mode-toggle"),
     themeToggleDarkIcon: document.getElementById("theme-toggle-dark-icon"),
     themeToggleLightIcon: document.getElementById("theme-toggle-light-icon"),
+    themeSelector: document.getElementById("theme-selector"),
     fixationToggle: document.getElementById("fixation-toggle"),
     languageSelector: document.getElementById("language-selector"),
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
     readingModeSelector: document.getElementById("reading-mode-selector"),
+    fontFamilySelector: document.getElementById("font-family-selector"),
+    fontSizeSlider: document.getElementById("font-size-slider"),
+    fontSizeLabel: document.getElementById("font-size-label"),
 
     // Auth Modal
     authModalOverlay: document.getElementById("auth-modal-overlay"),
@@ -167,10 +171,23 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     return text;
 }
 
-export function applyTheme(isDark) {
+export function applyTheme(theme, isDark) {
+    // Apply the color theme to the body
+    if (theme) {
+        document.body.dataset.theme = theme;
+        // Also update the selector component's value if it exists
+        const themeSelector = document.getElementById('theme-selector');
+        if (themeSelector) themeSelector.value = theme;
+    }
+
+    // Apply dark/light mode to the root element
     document.documentElement.classList.toggle("dark", isDark);
-    dom.themeToggleDarkIcon?.classList.toggle("hidden", !isDark);
-    dom.themeToggleLightIcon?.classList.toggle("hidden", isDark);
+
+    // Update icon visibility
+    const darkIcon = document.getElementById('theme-toggle-dark-icon');
+    const lightIcon = document.getElementById('theme-toggle-light-icon');
+    if (darkIcon) darkIcon.classList.toggle('hidden', !isDark);
+    if (lightIcon) lightIcon.classList.toggle('hidden', isDark);
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -266,6 +283,25 @@ function setupReaderControls() {
         readerState.isFixationPointEnabled = dom.fixationToggle.checked;
         scheduleSave();
     });
+
+    // Event listeners for font controls
+    dom.fontFamilySelector?.addEventListener('change', (e) => {
+        if(documentState.simplemde) {
+            documentState.simplemde.codemirror.getWrapperElement().style.fontFamily = e.target.value;
+        }
+        scheduleSave();
+    });
+
+    dom.fontSizeSlider?.addEventListener('input', (e) => {
+        const newSize = e.target.value;
+        if(documentState.simplemde) {
+            documentState.simplemde.codemirror.getWrapperElement().style.fontSize = `${newSize}px`;
+        }
+        if(dom.fontSizeLabel) {
+            dom.fontSizeLabel.textContent = `Font Size: ${newSize}px`;
+        }
+        scheduleSave();
+    });
 }
 
 function setupActionButtons() {
@@ -334,12 +370,22 @@ function setupAuthEventListeners() {
 
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
+
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = document.documentElement.classList.toggle("dark");
+        const isDark = !document.documentElement.classList.contains('dark');
+        const currentTheme = dom.themeSelector?.value || 'blue';
         appState.userHasManuallySetTheme = true;
-        applyTheme(isDark);
+        applyTheme(currentTheme, isDark);
         scheduleSave();
     });
+
+    dom.themeSelector?.addEventListener('change', (e) => {
+        const newTheme = e.target.value;
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(newTheme, isDark);
+        scheduleSave();
+    });
+
     dom.languageSelector?.addEventListener("change", (event) => {
         setLanguage(event.target.value);
         scheduleSave();

@@ -92,13 +92,13 @@ export async function updateTextStats() {
         const displayMinutes = Math.floor(totalSeconds / 60);
         const displaySeconds = totalSeconds % 60;
         if (dom.estimatedReadingTimeDisplay) {
-            dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormat", appState.currentLanguage, "en", { min: displayMinutes, sec: (displaySeconds < 10 ? "0" : "") + displaySeconds });
+            dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormat", appState.currentLanguage, { min: displayMinutes, sec: (displaySeconds < 10 ? "0" : "") + displaySeconds });
         }
     } else {
         if (dom.estimatedReadingTimeDisplay) dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormatZero");
     }
     if (dom.progressInfoDisplay) {
-        dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, "en", {
+        dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, {
             unit: readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage) ? getTranslation("charsLabel") : getTranslation("wordsLabel"),
             current: readerState.currentIndex,
             total: readerState.words.length,
