@@ -1,7 +1,7 @@
 // main.js - The entry point of the application.
 import * as auth from './auth.js';
 import { appState, readerState, documentState, LS_KEYS } from './state.js';
-import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage } from './ui.js';
+import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, updateAuthUI, showMessage, applyReaderStyles } from './ui.js';
 import { updateTextStats } from './text_handler.js';
 import { formatWordWithFixation, updateProgressBar } from './reader.js';
 import { renderDocumentList, attachDocumentEventListeners, loadDocument } from './document_manager.js';
@@ -9,7 +9,6 @@ import { renderDocumentList, attachDocumentEventListeners, loadDocument } from '
 // --- Settings Management ---
 
 function getCurrentSettings() {
-    const editor = document.querySelector('.CodeMirror');
     return {
         language: appState.currentLanguage,
         colorTheme: document.body.dataset.theme || 'blue',
@@ -19,9 +18,9 @@ function getCurrentSettings() {
         wpm: readerState.currentWpm,
         chunkSize: readerState.chunkSize,
         readingMode: readerState.readingMode,
-        fontFamily: editor?.style.fontFamily || "'Roboto', sans-serif",
-        fontSize: editor?.style.fontSize ? parseInt(editor.style.fontSize, 10) : 16,
-        text: documentState.simplemde ? documentState.simplemde.value() : (dom.textInput ? dom.textInput.value : ''),
+        fontFamily: appState.fontFamily,
+        fontSize: appState.fontSize,
+        text: documentState.simplemde ? documentState.simplemde.value() : '',
     };
 }
 
@@ -30,12 +29,9 @@ function applySettings(settings) {
     appState.currentLanguage = translations[lang] ? lang : "ko";
 
     appState.userHasManuallySetTheme = settings.userHasManuallySetTheme || false;
-
     const isDark = settings.darkMode ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
     const theme = settings.colorTheme || 'blue';
     applyTheme(theme, isDark);
-    if (dom.themeSelector) dom.themeSelector.value = theme;
-
 
     readerState.isFixationPointEnabled = settings.isFixationPointEnabled || false;
     if (dom.fixationToggle) dom.fixationToggle.checked = readerState.isFixationPointEnabled;
@@ -49,19 +45,15 @@ function applySettings(settings) {
     readerState.readingMode = settings.readingMode || 'flash';
     if (dom.readingModeSelector) dom.readingModeSelector.value = readerState.readingMode;
 
-    const editor = document.querySelector('.CodeMirror');
-    if (editor) {
-        editor.style.fontFamily = settings.fontFamily || "'Roboto', sans-serif";
-        editor.style.fontSize = `${settings.fontSize || 16}px`;
-    }
-    if (dom.fontFamilySelector) dom.fontFamilySelector.value = settings.fontFamily || "'Roboto', sans-serif";
-    if (dom.fontSizeSlider) dom.fontSizeSlider.value = settings.fontSize || 16;
-    if (dom.fontSizeLabel) dom.fontSizeLabel.textContent = `Font Size: ${settings.fontSize || 16}px`;
+    appState.fontFamily = settings.fontFamily || "'Roboto', sans-serif";
+    appState.fontSize = settings.fontSize || 48;
+    if (dom.fontFamilySelector) dom.fontFamilySelector.value = appState.fontFamily;
+    if (dom.fontSizeSlider) dom.fontSizeSlider.value = appState.fontSize;
+    if (dom.fontSizeLabel) dom.fontSizeLabel.textContent = getTranslation('fontSizeLabel', appState.currentLanguage, { size: appState.fontSize });
+    applyReaderStyles(appState.fontFamily, appState.fontSize);
 
-
-    if (settings.text && dom.textInput) {
-        dom.textInput.value = settings.text;
-        if (documentState.simplemde) documentState.simplemde.value(settings.text);
+    if (settings.text && documentState.simplemde) {
+        documentState.simplemde.value(settings.text);
     }
 }
 
@@ -106,10 +98,8 @@ export async function handleSuccessfulLogin() {
     setLanguage(appState.currentLanguage, true);
     updateTextStats();
 
-    // Restore last opened document
     const lastDocId = localStorage.getItem(LS_KEYS.LAST_DOC_ID);
     if (lastDocId) {
-        // Check if the document element exists in the newly rendered list
         const docElement = dom.documentList.querySelector(`.document-item[data-id="${lastDocId}"]`);
         if (docElement) {
             try {
@@ -119,7 +109,7 @@ export async function handleSuccessfulLogin() {
                 }
             } catch (error) {
                 console.error("Failed to load last opened document:", error);
-                localStorage.removeItem(LS_KEYS.LAST_DOC_ID); // Clean up if doc is invalid
+                localStorage.removeItem(LS_KEYS.LAST_DOC_ID);
             }
         }
     }
@@ -136,42 +126,21 @@ export function handleLogout() {
 
 async function initializeApp() {
     try {
-        updateAuthUI();
-        await loadAndApplySettings();
-        await renderDocumentList();
-
         if (document.getElementById("text-input")) {
             documentState.simplemde = new SimpleMDE({
                 element: document.getElementById("text-input"),
                 spellChecker: false,
-                autosave: { enabled: false, uniqueId: "ReadMindContent" },
+                autosave: { enabled: false },
                 toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
             });
-
-            if (dom.textInput.value) {
-                documentState.simplemde.value(dom.textInput.value);
-            }
         }
 
-        updateTextStats();
+        await loadAndApplySettings();
+        updateAuthUI();
+        await renderDocumentList();
         setLanguage(appState.currentLanguage, true);
-
-        let initialState = "initial";
-        const savedIndex = parseInt(localStorage.getItem(LS_KEYS.INDEX) || "0", 10);
-
-        if (dom.textInput && dom.textInput.value.trim() !== "") {
-            if (readerState.words && readerState.words.length > 0 && savedIndex > 0 && savedIndex < readerState.words.length) {
-                readerState.currentIndex = savedIndex;
-                readerState.isPaused = true;
-                initialState = "paused";
-            } else {
-                initialState = "initial";
-            }
-        } else {
-            initialState = "empty";
-        }
-
-        updateButtonStates(initialState);
+        updateTextStats();
+        updateButtonStates("initial");
         updateProgressBar();
 
         const hasVisited = localStorage.getItem(LS_KEYS.HAS_VISITED);
@@ -182,7 +151,6 @@ async function initializeApp() {
 
     } catch (error) {
         console.error("Error during app initialization:", error);
-        // Even if initialization fails, we must attach event listeners so the user can try to log in, etc.
     } finally {
         attachEventListeners();
         attachDocumentEventListeners();

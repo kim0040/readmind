@@ -37,9 +37,48 @@ function getTokenizer() {
     });
 }
 
+function segmentTextWithBrowserAPI(text) {
+    const words = [];
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.whiteSpace = 'pre-wrap';
+    tempDiv.innerText = text;
+    document.body.appendChild(tempDiv);
+
+    const selection = window.getSelection();
+    if (!selection) return text.split(''); // Fallback
+    const range = document.createRange();
+    range.selectNodeContents(tempDiv);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    let currentPos = 0;
+    while (currentPos < text.length) {
+        selection.collapse(tempDiv.firstChild, currentPos);
+        selection.modify('move', 'forward', 'word');
+        selection.modify('extend', 'forward', 'word');
+
+        let word = selection.toString();
+        if (word.trim().length > 0) {
+            words.push(word);
+        }
+
+        const endOffset = selection.getRangeAt(0).endOffset;
+        if (endOffset === currentPos) { // Break if we are not making progress
+            break;
+        }
+        currentPos = endOffset;
+    }
+
+    document.body.removeChild(tempDiv);
+    selection.removeAllRanges();
+    return words.filter(w => w.trim().length > 0);
+}
+
 export async function updateTextStats() {
     if (!dom.textInput) return;
-    const currentText = dom.textInput.value;
+    const currentText = documentState.simplemde ? documentState.simplemde.value() : dom.textInput.value;
 
     const urlRegex = /https?:\/\/[^\s/$.?#].[^\s]*/g;
     const emailRegex = /\S+@\S+\.\S+/g;
@@ -55,7 +94,7 @@ export async function updateTextStats() {
             words = cleanedText.replace(/\s+/g, "").split("");
         }
     } else if (readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage)) {
-        words = cleanedText.replace(/\s+/g, "").split("");
+        words = segmentTextWithBrowserAPI(cleanedText);
     } else {
         words = cleanedText.trim().split(/\s+/).filter((word) => word.length > 0);
     }
@@ -72,46 +111,43 @@ export async function updateTextStats() {
         readerState.words = words;
     }
 
-    if (dom.charCountWithSpaceDisplay) dom.charCountWithSpaceDisplay.textContent = currentText.length;
-    const textWithoutSpaces = currentText.replace(/\s+/g, "");
-    if (dom.charCountWithoutSpaceDisplay) dom.charCountWithoutSpaceDisplay.textContent = textWithoutSpaces.length;
-    if (dom.byteCountDisplay) dom.byteCountDisplay.textContent = appState.encoder.encode(currentText).length;
-    if (dom.wordCountDisplay) dom.wordCountDisplay.textContent = wordCount;
-
-    const sentences = currentText.match(/[^\.!\?]+[\.!\?]+/g);
-    if (dom.sentenceCountDisplay) dom.sentenceCountDisplay.textContent = sentences ? sentences.length : 0;
-    const paragraphs = currentText === "" ? 0 : currentText.split(/\n\s*\n/).filter((p) => p.trim() !== "").length;
-    if (dom.paragraphCountDisplay) dom.paragraphCountDisplay.textContent = paragraphs || (currentText.trim() !== "" ? 1 : 0);
-
-    if (dom.statsWpmValueDisplay) dom.statsWpmValueDisplay.textContent = readerState.currentWpm;
-    if (dom.statsUnitLabel) dom.statsUnitLabel.textContent = readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage) ? "CPM" : "WPM";
-
-    if (wordCount > 0 && readerState.currentWpm > 0) {
-        const minutes = wordCount / readerState.currentWpm;
-        const totalSeconds = Math.floor(minutes * 60);
-        const displayMinutes = Math.floor(totalSeconds / 60);
-        const displaySeconds = totalSeconds % 60;
-        if (dom.estimatedReadingTimeDisplay) {
-            dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormat", appState.currentLanguage, "en", { min: displayMinutes, sec: (displaySeconds < 10 ? "0" : "") + displaySeconds });
-        }
-    } else {
-        if (dom.estimatedReadingTimeDisplay) dom.estimatedReadingTimeDisplay.textContent = getTranslation("timeFormatZero");
-    }
-    if (dom.progressInfoDisplay) {
-        dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, "en", {
-            unit: readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage) ? getTranslation("charsLabel") : getTranslation("wordsLabel"),
-            current: readerState.currentIndex,
-            total: readerState.words.length,
-        });
-    }
     updateProgressBar();
+    updateDetailedStats(cleanedText);
+}
+
+function updateDetailedStats(text) {
+    if (typeof textReadability === 'undefined') {
+        return;
+    }
+    if (!text || text.trim() === "") {
+        if (dom.readabilityScore) dom.readabilityScore.textContent = "-";
+        if (dom.avgSentenceLength) dom.avgSentenceLength.textContent = "-";
+        if (dom.syllableCount) dom.syllableCount.textContent = "-";
+        if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = "-";
+        return;
+    }
+    try {
+        if (dom.readabilityScore) dom.readabilityScore.textContent = textReadability.fleschKincaidGrade(text).toFixed(1);
+        const wordCount = textReadability.lexiconCount(text);
+        const sentenceCount = textReadability.sentenceCount(text);
+        if (dom.avgSentenceLength) {
+            dom.avgSentenceLength.textContent = sentenceCount > 0 ? (wordCount / sentenceCount).toFixed(1) : (wordCount > 0 ? wordCount.toFixed(1) : "-");
+        }
+        if (dom.syllableCount) dom.syllableCount.textContent = textReadability.syllableCount(text);
+        if (dom.lexicalDiversity) {
+            const uniqueWords = [...new Set(text.toLowerCase().match(/\b\w+\b/g) || [])].length;
+            dom.lexicalDiversity.textContent = wordCount > 0 ? ((uniqueWords / wordCount) * 100).toFixed(1) + '%' : "-";
+        }
+    } catch (error) {
+        console.error("Error calculating detailed stats:", error);
+    }
 }
 
 export async function handleTextChange(newTextSourceOrEvent) {
     if (typeof newTextSourceOrEvent === "string") {
-        dom.textInput.value = newTextSourceOrEvent;
+        if (documentState.simplemde) documentState.simplemde.value(newTextSourceOrEvent);
     }
-    const currentText = dom.textInput.value;
+    const currentText = documentState.simplemde ? documentState.simplemde.value() : '';
 
     if (readerState.intervalId) {
         clearInterval(readerState.intervalId);
@@ -130,10 +166,4 @@ export async function handleTextChange(newTextSourceOrEvent) {
 
     scheduleSave();
     localStorage.setItem(LS_KEYS.INDEX, "0");
-
-    if (currentText.trim() && dom.textInput.placeholder !== "") {
-        dom.textInput.placeholder = "";
-    } else if (!currentText.trim() && appState.originalPlaceholderText && dom.textInput.placeholder !== appState.originalPlaceholderText) {
-        dom.textInput.placeholder = appState.originalPlaceholderText;
-    }
 }

@@ -36,10 +36,14 @@ export const dom = {
     darkModeToggle: document.getElementById("dark-mode-toggle"),
     themeToggleDarkIcon: document.getElementById("theme-toggle-dark-icon"),
     themeToggleLightIcon: document.getElementById("theme-toggle-light-icon"),
+    themeSelector: document.getElementById("theme-selector"),
     fixationToggle: document.getElementById("fixation-toggle"),
     languageSelector: document.getElementById("language-selector"),
     chunkSizeSelector: document.getElementById("chunk-size-selector"),
     readingModeSelector: document.getElementById("reading-mode-selector"),
+    fontFamilySelector: document.getElementById("font-family-selector"),
+    fontSizeSlider: document.getElementById("font-size-slider"),
+    fontSizeLabel: document.getElementById("font-size-label"),
 
     // Auth Modal
     authModalOverlay: document.getElementById("auth-modal-overlay"),
@@ -51,10 +55,15 @@ export const dom = {
     passwordInput: document.getElementById("password"),
     authSwitchText: document.getElementById("auth-switch-text"),
 
-
     // Document List
     documentList: document.getElementById("document-list"),
     authStatus: document.getElementById("auth-status"),
+
+    // Detailed Stats
+    readabilityScore: document.getElementById("readability-score"),
+    avgSentenceLength: document.getElementById("avg-sentence-length"),
+    syllableCount: document.getElementById("syllable-count"),
+    lexicalDiversity: document.getElementById("lexical-diversity"),
 };
 
 function openAuthModal(isLogin = true) {
@@ -106,7 +115,6 @@ export function showConfirmationModal(titleKey, messageKey, onConfirm) {
     confirmBtn.textContent = getTranslation('confirmButton');
     cancelBtn.textContent = getTranslation('cancelButton');
 
-    // To prevent multiple listeners from being attached, we clone and replace the buttons
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
     const newCancelBtn = cancelBtn.cloneNode(true);
@@ -120,7 +128,6 @@ export function showConfirmationModal(titleKey, messageKey, onConfirm) {
         onConfirm();
         close();
     };
-
     newCancelBtn.onclick = close;
     overlay.onclick = (e) => {
         if (e.target === overlay) {
@@ -129,6 +136,13 @@ export function showConfirmationModal(titleKey, messageKey, onConfirm) {
     };
 
     overlay.classList.remove('hidden');
+}
+
+export function applyReaderStyles(fontFamily, fontSize) {
+    if (dom.currentWordDisplay) {
+        dom.currentWordDisplay.style.fontFamily = fontFamily;
+        dom.currentWordDisplay.style.fontSize = `${fontSize}px`;
+    }
 }
 
 export function updateAuthUI() {
@@ -143,34 +157,34 @@ export function updateAuthUI() {
     }
 }
 
-/**
- * Escapes special characters in a string for use in a regular expression.
- * @param {string} str The string to escape.
- * @returns {string} The escaped string.
- */
 function escapeRegExp(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function getTranslation(key, lang = appState.currentLanguage, params = null) {
     const langToUse = translations[lang] || translations["en"];
     let text = langToUse?.[key] || key;
-    if (params) {
+    if (params && typeof text === 'string') {
         for (const pKey in params) {
-            // BUG FIX: Use a simple, safe string replacement instead of a complex RegExp.
-            // This prevents errors when a key is a number (e.g., {0}).
             const placeholder = `{${pKey}}`;
-            // Use replaceAll to handle multiple occurrences of the same placeholder.
             text = text.replaceAll(placeholder, params[pKey]);
         }
     }
     return text;
 }
 
-export function applyTheme(isDark) {
+export function applyTheme(theme, isDark) {
+    if (theme) {
+        document.body.dataset.theme = theme;
+    }
     document.documentElement.classList.toggle("dark", isDark);
-    dom.themeToggleDarkIcon?.classList.toggle("hidden", !isDark);
-    dom.themeToggleLightIcon?.classList.toggle("hidden", isDark);
+
+    if (dom.themeToggleDarkIcon) {
+        dom.themeToggleDarkIcon.style.display = isDark ? 'inline-flex' : 'none';
+    }
+    if (dom.themeToggleLightIcon) {
+        dom.themeToggleLightIcon.style.display = isDark ? 'none' : 'inline-flex';
+    }
 }
 
 export function setLanguage(lang, isInitializing = false) {
@@ -178,7 +192,13 @@ export function setLanguage(lang, isInitializing = false) {
     if (dom.languageSelector) dom.languageSelector.value = lang;
     document.documentElement.lang = lang;
     document.querySelectorAll("[data-lang-key]").forEach((el) => {
-        el.innerHTML = getTranslation(el.dataset.langKey);
+        const key = el.dataset.langKey;
+        const translation = getTranslation(key);
+        if (el.tagName === 'MD-SLIDER' && key === 'wpm-cpm-label') {
+             el.label = translation;
+        } else {
+             el.innerHTML = translation;
+        }
     });
     if (!isInitializing) {
         updateTextStats();
@@ -197,7 +217,6 @@ export function showMessage(messageKey, type = "info", duration = 3000) {
     setTimeout(() => { messageBox.classList.remove("show"); }, duration);
 }
 
-
 export function updateButtonStates(buttonState) {
     if (!dom.startButton || !dom.pauseButton || !dom.resetButton) return;
     dom.startButton.textContent = getTranslation("startButton");
@@ -207,7 +226,6 @@ export function updateButtonStates(buttonState) {
     dom.pauseButton.disabled = true;
     dom.resetButton.disabled = true;
 
-    // Check if there is text to process
     const hasText = dom.textInput && dom.textInput.value.trim().length > 0;
 
     switch (buttonState) {
@@ -227,11 +245,9 @@ export function updateButtonStates(buttonState) {
             dom.resetButton.disabled = false;
             break;
         case "empty":
-            // All buttons remain disabled
             break;
     }
 }
-
 
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -255,13 +271,27 @@ function setupReaderControls() {
     });
     dom.wpmInput?.addEventListener("input", () => {
         const newWpm = parseInt(dom.wpmInput.value, 10);
-        readerState.currentWpm = newWpm; // Update state immediately
+        readerState.currentWpm = newWpm;
         updateTextStats();
         scheduleSave();
         updateReadingSpeed(newWpm);
     });
     dom.fixationToggle?.addEventListener("change", () => {
         readerState.isFixationPointEnabled = dom.fixationToggle.checked;
+        scheduleSave();
+    });
+    dom.fontFamilySelector?.addEventListener('change', (e) => {
+        appState.fontFamily = e.target.value;
+        applyReaderStyles(appState.fontFamily, appState.fontSize);
+        scheduleSave();
+    });
+    dom.fontSizeSlider?.addEventListener('input', (e) => {
+        const newSize = e.target.value;
+        appState.fontSize = newSize;
+        if(dom.fontSizeLabel) {
+            dom.fontSizeLabel.textContent = getTranslation('fontSizeLabel', appState.currentLanguage, { size: newSize });
+        }
+        applyReaderStyles(appState.fontFamily, appState.fontSize);
         scheduleSave();
     });
 }
@@ -312,7 +342,6 @@ function setupAuthEventListeners() {
                 handleSuccessfulLogin();
                 closeAuthModal();
             } else {
-                // Use error_code from backend if available
                 const errorCode = response.error_code;
                 const messageKey = errorCode ? `error_${errorCode}` : (response.message || 'msgAuthError');
                 throw new Error(messageKey);
@@ -323,19 +352,24 @@ function setupAuthEventListeners() {
             grecaptcha.reset();
             dom.authSubmitButton.disabled = false;
             dom.authSubmitButton.textContent = originalButtonText;
-            // Re-apply translation in case it was overwritten by 'loading'
             setLanguage(appState.currentLanguage, true);
         }
     });
 }
 
-
 function setupGeneralEventListeners() {
     dom.fullscreenButton?.addEventListener('click', toggleFullscreen);
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = document.documentElement.classList.toggle("dark");
+        const isDark = !document.documentElement.classList.contains('dark');
+        const currentTheme = dom.themeSelector?.value || 'blue';
         appState.userHasManuallySetTheme = true;
-        applyTheme(isDark);
+        applyTheme(currentTheme, isDark);
+        scheduleSave();
+    });
+    dom.themeSelector?.addEventListener('change', (e) => {
+        const newTheme = e.target.value;
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(newTheme, isDark);
         scheduleSave();
     });
     dom.languageSelector?.addEventListener("change", (event) => {
@@ -346,22 +380,18 @@ function setupGeneralEventListeners() {
 
 function setupSidebarEventListeners() {
     if (!dom.hamburgerMenuButton) return;
-
     const openSidebar = () => {
         dom.documentSidebar?.classList.remove('-translate-x-full');
         dom.sidebarOverlay?.classList.remove('hidden');
     };
-
     const closeSidebar = () => {
         dom.documentSidebar?.classList.add('-translate-x-full');
         dom.sidebarOverlay?.classList.add('hidden');
     };
-
     dom.hamburgerMenuButton.addEventListener('click', openSidebar);
     dom.closeSidebarButton?.addEventListener('click', closeSidebar);
     dom.sidebarOverlay?.addEventListener('click', closeSidebar);
 }
-
 
 export function attachEventListeners() {
     setupReaderControls();
@@ -370,4 +400,3 @@ export function attachEventListeners() {
     setupGeneralEventListeners();
     setupSidebarEventListeners();
 }
-
