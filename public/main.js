@@ -1,5 +1,4 @@
 // main.js - The entry point of the application.
-import { translations } from './translations.js';
 import * as auth from './auth.js';
 import { appState, readerState, documentState, LS_KEYS } from './state.js';
 import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, applyReaderStyles } from './ui.js';

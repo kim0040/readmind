@@ -1,5 +1,5 @@
 // translations.js
-export const translations = {
+window.translations = {
   en: {
     pageTitle: "ReadMind - Speed Reading & Text Analysis",
     siteName: "ReadMind",
