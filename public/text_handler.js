@@ -1,7 +1,7 @@
 // text_handler.js - Handles text statistics and input changes
 
 import { dom, getTranslation, updateButtonStates } from "./ui.js";
-import { appState, readerState, LS_KEYS } from "./state.js";
+import { appState, readerState, documentState, LS_KEYS } from "./state.js";
 import { scheduleSave } from "./main.js";
 import { formatWordWithFixation, updateProgressBar } from "./reader.js";
 
