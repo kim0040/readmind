@@ -1,0 +1,4 @@
+[dotenv@17.2.2] injecting env (1) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+Connected to the SQLite database.
+Users table is ready.
+Server is running on http://localhost:3000

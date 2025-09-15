@@ -1,0 +1,4 @@
+[dotenv@17.2.2] injecting env (1) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+Connected to the SQLite database.
+Users table is ready.
+Server is running on http://localhost:3000

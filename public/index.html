@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title data-lang-key="pageTitle">ReadMind - Speed Reading & Text Analysis</title>
+        <link rel="icon" href="favicon.png" type="image/png" />
+        <!-- Tailwind CSS CDN - Production optimized -->
+        <script src="https://cdn.tailwindcss.com?v=3.3.0"></script>
+        <script>
+            // Tailwind config for production
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            'md-sys-color-primary': 'var(--md-sys-color-primary)',
+                            'md-sys-color-surface': 'var(--md-sys-color-surface)',
+                        }
+                    }
+                }
+            }
+        </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <style>
+            /* 전역 테마 색상이 페이지 전체에 적용되도록 보장 */
+            html { color-scheme: light dark; }
+            body {
+                background-color: var(--md-sys-color-background);
+                color: var(--md-sys-color-on-background);
+            }
+            :root {
+                --md-sys-typescale-body-large-font: 'Roboto', sans-serif;
+                --md-sys-typescale-body-large-size: 16px;
+                --md-sys-typescale-body-large-line-height: 24px;
+                --md-sys-typescale-body-large-weight: 400;
+                --md-sys-typescale-headline-large-font: 'Roboto', sans-serif;
+                --md-sys-typescale-headline-large-size: 32px;
+                --md-sys-typescale-headline-large-line-height: 40px;
+                --md-sys-typescale-headline-large-weight: 400;
+            }
+            
+            body {
+                background-color: var(--md-sys-color-background);
+                color: var(--md-sys-color-on-background);
+                font-family: var(--md-sys-typescale-body-large-font);
+                font-size: var(--md-sys-typescale-body-large-size);
+                line-height: var(--md-sys-typescale-body-large-line-height);
+                font-weight: var(--md-sys-typescale-body-large-weight);
+            }
+            
+            .main-card, #document-sidebar, #auth-modal, .document-item, #confirmation-modal {
+                background-color: var(--md-sys-color-surface);
+                color: var(--md-sys-color-on-surface);
+                transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            }
+            
+            .settings-card {
+                background-color: var(--md-sys-color-surface-variant);
+                color: var(--md-sys-color-on-surface-variant);
+            }
+            
+            #word-display-area {
+                background-color: var(--md-sys-color-secondary-container);
+                color: var(--md-sys-color-on-secondary-container);
+                transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+                opacity: 1;
+                transform: scale(1);
+            }
+            
+            #site-title { 
+                color: var(--md-sys-color-primary);
+                font-family: var(--md-sys-typescale-headline-large-font);
+                font-size: var(--md-sys-typescale-headline-large-size);
+                line-height: var(--md-sys-typescale-headline-large-line-height);
+                font-weight: var(--md-sys-typescale-headline-large-weight);
+            }
+            
+            #progress-bar-fill { 
+                background-color: var(--md-sys-color-primary); 
+            }
+            
+            .fixation-point { 
+                color: var(--md-sys-color-primary); 
+                font-weight: bold; 
+                text-shadow: 0 0 8px var(--md-sys-color-primary);
+                background-color: var(--md-sys-color-primary-container);
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+            
+            #document-sidebar { 
+                border-right-color: var(--md-sys-color-outline-variant); 
+            }
+            
+            #document-sidebar .border-b, #document-sidebar .border-t { 
+                border-color: var(--md-sys-color-outline-variant); 
+            }
+            
+            .dark .editor-toolbar { 
+                background-color: var(--md-sys-color-surface-variant); 
+                border-color: var(--md-sys-color-outline-variant); 
+            }
+            
+            .dark .editor-toolbar a { 
+                color: var(--md-sys-color-on-surface-variant) !important; 
+            }
+            
+            .dark .editor-toolbar a:hover, .dark .editor-toolbar a.active { 
+                background-color: var(--md-sys-color-outline-variant); 
+            }
+            
+            .dark .CodeMirror { 
+                background-color: var(--md-sys-color-surface); 
+                color: var(--md-sys-color-on-surface); 
+                border-color: var(--md-sys-color-outline-variant) !important; 
+            }
+            
+            .dark .CodeMirror-cursor { 
+                border-left-color: var(--md-sys-color-on-surface) !important; 
+            }
+            
+            .dark .editor-preview, .dark .editor-preview-side { 
+                background-color: var(--md-sys-color-background); 
+            }
+            
+            /* SimpleMDE 에디터 스타일 개선 */
+            .editor-toolbar {
+                background-color: var(--md-sys-color-surface-container);
+                border: 1px solid var(--md-sys-color-outline-variant);
+                border-radius: 12px 12px 0 0;
+                padding: 8px 12px;
+                margin-bottom: 0;
+            }
+            
+            .editor-toolbar a {
+                color: var(--md-sys-color-on-surface-variant) !important;
+                border-radius: 8px;
+                padding: 8px;
+                margin: 0 2px;
+                transition: all 0.2s ease;
+            }
+            
+            .editor-toolbar a:hover {
+                background-color: var(--md-sys-color-primary-container);
+                color: var(--md-sys-color-on-primary-container) !important;
+            }
+            
+            .editor-toolbar a.active {
+                background-color: var(--md-sys-color-primary);
+                color: var(--md-sys-color-on-primary) !important;
+            }
+            
+            .CodeMirror {
+                background-color: var(--md-sys-color-surface);
+                color: var(--md-sys-color-on-surface);
+                border: 1px solid var(--md-sys-color-outline-variant);
+                border-top: none;
+                border-radius: 0 0 12px 12px;
+                font-family: 'Roboto', sans-serif;
+                font-size: 16px;
+                line-height: 1.6;
+                padding: 16px;
+                min-height: 400px;
+            }
+            
+            .CodeMirror-cursor {
+                border-left-color: var(--md-sys-color-primary);
+                border-left-width: 2px;
+            }
+            
+            .CodeMirror-selected {
+                background-color: var(--md-sys-color-primary-container);
+            }
+            
+            .CodeMirror-focused .CodeMirror-selected {
+                background-color: var(--md-sys-color-primary-container);
+            }
+            
+            .CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection {
+                background-color: var(--md-sys-color-primary-container);
+            }
+            
+            .CodeMirror-gutters {
+                background-color: var(--md-sys-color-surface-container-low);
+                border-right: 1px solid var(--md-sys-color-outline-variant);
+            }
+            
+            .CodeMirror-linenumber {
+                color: var(--md-sys-color-on-surface-variant);
+            }
+            
+            /* 애니메이션 및 전환 효과 */
+            * {
+                transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            }
+            
+            .main-card, #document-sidebar, #auth-modal, .document-item, #confirmation-modal {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .main-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            
+            .document-item {
+                transition: all 0.2s ease-in-out;
+            }
+            
+            .document-item:hover {
+                transform: translateX(4px);
+            }
+            
+            #word-display-area {
+                /* 원본 ReadMindApp 스타일 - 동적 애니메이션 */
+                opacity: 1;
+                transform: translateY(0px);
+            }
+            
+            .fixation-point {
+                color: #e53e3e !important;
+                font-weight: bold !important;
+                background: none !important;
+                background-color: transparent !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+                text-decoration: none !important;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+            
+            .message-box {
+                animation: slideInDown 0.3s ease-out;
+            }
+            
+            .message-box.show {
+                animation: slideInDown 0.3s ease-out;
+            }
+            
+            @keyframes slideInDown {
+                from {
+                    transform: translate(-50%, -100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translate(-50%, 0);
+                    opacity: 1;
+                }
+            }
+            
+            /* Material Web Components 커스터마이징 */
+            md-filled-button, md-outlined-button, md-filled-tonal-button {
+                --md-sys-color-primary: var(--md-sys-color-primary);
+                --md-sys-color-on-primary: var(--md-sys-color-on-primary);
+                --md-sys-color-primary-container: var(--md-sys-color-primary-container);
+                --md-sys-color-on-primary-container: var(--md-sys-color-on-primary-container);
+                transition: all 0.2s ease-in-out;
+            }
+            
+            md-outlined-text-field {
+                --md-sys-color-outline: var(--md-sys-color-outline);
+                --md-sys-color-outline-variant: var(--md-sys-color-outline-variant);
+                --md-sys-color-primary: var(--md-sys-color-primary);
+                --md-sys-color-on-surface: var(--md-sys-color-on-surface);
+                --md-sys-color-surface: var(--md-sys-color-surface);
+                transition: all 0.2s ease-in-out;
+            }
+            
+            md-outlined-select {
+                --md-sys-color-outline: var(--md-sys-color-outline);
+                --md-sys-color-outline-variant: var(--md-sys-color-outline-variant);
+                --md-sys-color-primary: var(--md-sys-color-primary);
+                --md-sys-color-on-surface: var(--md-sys-color-on-surface);
+                --md-sys-color-surface: var(--md-sys-color-surface);
+                transition: all 0.2s ease-in-out;
+            }
+            
+            md-slider {
+                --md-sys-color-primary: var(--md-sys-color-primary);
+                --md-sys-color-outline: var(--md-sys-color-outline);
+                --md-sys-color-outline-variant: var(--md-sys-color-outline-variant);
+                transition: all 0.2s ease-in-out;
+            }
+            
+            md-switch {
+                --md-sys-color-primary: var(--md-sys-color-primary);
+                --md-sys-color-outline: var(--md-sys-color-outline);
+                --md-sys-color-surface: var(--md-sys-color-surface);
+                transition: all 0.2s ease-in-out;
+            }
+            
+            /* 전역 Tailwind 색상 오버레이 */
+            .bg-white { background-color: var(--md-sys-color-surface, #ffffff) !important; }
+            .bg-slate-50 { background-color: var(--md-sys-color-surface-variant, #f8fafc) !important; }
+            .bg-slate-100 { background-color: var(--md-sys-color-surface-container, #f1f5f9) !important; }
+            .bg-slate-200 { background-color: var(--md-sys-color-surface-container-high, #e2e8f0) !important; }
+            .bg-slate-800 { background-color: var(--md-sys-color-surface-container-low, #1e293b) !important; }
+            .bg-slate-900 { background-color: var(--md-sys-color-surface, #0f172a) !important; }
+            
+            .text-slate-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; }
+            .text-slate-600 { color: var(--md-sys-color-on-surface, #475569) !important; }
+            .text-slate-700 { color: var(--md-sys-color-on-surface, #334155) !important; }
+            .text-slate-800 { color: var(--md-sys-color-on-surface, #1e293b) !important; }
+            .text-slate-200 { color: var(--md-sys-color-on-surface, #e2e8f0) !important; }
+            .text-slate-300 { color: var(--md-sys-color-on-surface-variant, #cbd5e1) !important; }
+            .text-slate-400 { color: var(--md-sys-color-on-surface-variant, #94a3b8) !important; }
+            
+            .border-slate-200 { border-color: var(--md-sys-color-outline-variant, #e2e8f0) !important; }
+            .border-slate-300 { border-color: var(--md-sys-color-outline, #cbd5e1) !important; }
+            .border-slate-700 { border-color: var(--md-sys-color-outline, #334155) !important; }
+            
+            .dark .bg-slate-800 { background-color: var(--md-sys-color-surface-container, #1e293b) !important; }
+            .dark .bg-slate-900 { background-color: var(--md-sys-color-surface, #0f172a) !important; }
+            .dark .text-slate-200 { color: var(--md-sys-color-on-surface, #e2e8f0) !important; }
+            .dark .text-slate-300 { color: var(--md-sys-color-on-surface-variant, #cbd5e1) !important; }
+            .dark .text-slate-400 { color: var(--md-sys-color-on-surface-variant, #94a3b8) !important; }
+            .dark .border-slate-700 { border-color: var(--md-sys-color-outline, #334155) !important; }
+        </style>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.css" />
+        <script type="importmap">
+            { "imports": { "@material/web/": "https://esm.run/@material/web/" } }
+        </script>
+        <script type="module">
+            import '@material/web/all.js';
+            import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+            document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+        </script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        <link rel="stylesheet" href="themes.css" />
+    </head>
+    <body class="text-slate-800 dark:text-slate-200" style="font-family: 'Roboto', sans-serif;" role="application" aria-label="ReadMind Speed Reading Application">
+        <div class="relative flex w-full h-screen overflow-x-hidden">
+            <aside id="document-sidebar" class="fixed inset-y-0 left-0 z-40 w-full sm:w-80 border-r flex flex-col transform -translate-x-full md:relative md:translate-x-0 md:w-1/4 transition-transform duration-300 ease-in-out" role="navigation" aria-label="Document navigation">
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200" data-lang-key="documentsTitle">Documents</h2>
+                    <button id="close-sidebar-button" class="md:hidden p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" aria-label="Close sidebar" title="Close sidebar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto">
+                    <div class="p-4">
+                        <md-filled-button id="new-document-button" class="w-full mb-2" data-lang-key="newDocumentButton">New Document</md-filled-button>
+                        <md-outlined-button id="clear-text-button" class="w-full mb-4" data-lang-key="clearTextButton">Clear Text</md-outlined-button>
+                        <div id="document-list" class="space-y-2">
+                            <!-- Documents will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <main class="flex-grow p-4 sm:p-8 overflow-y-auto w-full">
+                <div class="main-card p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-4xl mx-auto">
+                    <header class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <button id="hamburger-menu-button" class="md:hidden p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" aria-label="Open sidebar" title="Open sidebar" aria-expanded="false" aria-controls="document-sidebar">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                    </svg>
+                                </button>
+                                <h1 id="site-title" class="text-2xl font-bold text-slate-800 dark:text-slate-200" data-lang-key="pageTitle">ReadMind</h1>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="dark-mode-toggle" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed="false">
+                                    <svg id="theme-toggle-dark-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                                    </svg>
+                                    <svg id="theme-toggle-light-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                </button>
+                                <md-outlined-select id="theme-selector" label="Theme" class="w-32">
+                                    <md-menu-item value="blue" selected><div slot="headline">Blue</div></md-menu-item>
+                                    <md-menu-item value="green"><div slot="headline">Green</div></md-menu-item>
+                                    <md-menu-item value="purple"><div slot="headline">Purple</div></md-menu-item>
+                                </md-outlined-select>
+                                <md-outlined-select id="language-selector" label="Language" class="w-32">
+                                    <md-menu-item value="ko" selected><div slot="headline">한국어</div></md-menu-item>
+                                    <md-menu-item value="en"><div slot="headline">English</div></md-menu-item>
+                                    <md-menu-item value="ja"><div slot="headline">日本語</div></md-menu-item>
+                                </md-outlined-select>
+                                <md-outlined-button id="login-button" data-lang-key="loginButton">Login</md-outlined-button>
+                                <md-outlined-button id="logout-button" class="hidden" data-lang-key="logoutButton">Logout</md-outlined-button>
+                            </div>
+                        </div>
+                    </header>
+                    <div id="editor-container" class="mb-4">
+                         <textarea id="text-input" rows="8"></textarea>
+                    </div>
+                    <div id="reader-container" role="region" aria-label="Speed reading display">
+                        <div id="word-display-area" class="p-8 text-center rounded-xl min-h-[120px] flex items-center justify-center" role="marquee" aria-live="polite" aria-label="Current word or text being read">
+                            <span id="current-word" class="text-4xl sm:text-5xl lg:text-6xl font-bold"></span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full mt-3 mb-1 overflow-hidden" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Reading progress">
+                            <div id="progress-bar-fill" class="h-full rounded-full"></div>
+                        </div>
+                        <div class="text-center text-sm text-slate-500 dark:text-slate-400 mb-6" aria-live="polite">
+                            <span id="progress-info"></span>
+                        </div>
+                    </div>
+                    <div class="settings-card mb-6 p-4 rounded-lg">
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-6 items-center">
+                            <div class="sm:col-span-4 flex flex-col">
+                                <md-slider id="wpm-input" min="50" max="500" value="250" step="10" labeled ticks class="w-full"></md-slider>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <md-outlined-select id="chunk-size-selector" label="Chunk Size" title="Words shown at a time" class="w-full">
+                                    <md-menu-item value="1" selected><div slot="headline">1</div></md-menu-item>
+                                    <md-menu-item value="2"><div slot="headline">2</div></md-menu-item>
+                                    <md-menu-item value="3"><div slot="headline">3</div></md-menu-item>
+                                </md-outlined-select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <md-outlined-select id="reading-mode-selector" label="Reading Mode" class="w-full">
+                                    <md-menu-item value="flash" selected><div slot="headline">Flash</div></md-menu-item>
+                                    <md-menu-item value="teleprompter"><div slot="headline">Teleprompter</div></md-menu-item>
+                                </md-outlined-select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <md-outlined-select id="font-family-selector" label="Font Family" class="w-full">
+                                    <md-menu-item value="'Roboto', sans-serif" selected><div slot="headline">Roboto</div></md-menu-item>
+                                    <md-menu-item value="'Noto Sans KR', sans-serif"><div slot="headline">Noto Sans KR</div></md-menu-item>
+                                    <md-menu-item value="'Source Serif 4', serif"><div slot="headline">Source Serif</div></md-menu-item>
+                                </md-outlined-select>
+                            </div>
+                            <div class="sm:col-span-2 flex flex-col">
+                                <label id="font-size-label" class="block text-xs sm:text-sm font-medium mb-1">Font Size: 48px</label>
+                                <md-slider id="font-size-slider" min="12" max="48" value="48" step="1" class="w-full"></md-slider>
+                            </div>
+                             <div class="sm:col-span-2 flex justify-center">
+                               <label for="fixation-toggle" class="flex items-center gap-2 cursor-pointer">
+                                    <span data-lang-key="fixationPointLabel">Fixation Point</span>
+                                    <md-switch id="fixation-toggle" icons></md-switch>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-3">
+                        <md-filled-button id="start-button"></md-filled-button>
+                        <md-filled-tonal-button id="pause-button"></md-filled-tonal-button>
+                        <md-outlined-button id="reset-button"></md-outlined-button>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <h3 class="text-lg font-semibold text-center mb-2" data-lang-key="basicStatsTitle">Text Statistics</h3>
+                        <div class="grid grid-cols-3 gap-4 text-center mb-4">
+                            <div>
+                                <div class="text-sm" data-lang-key="wordCountLabel">Words</div>
+                                <div data-stat="word-count" class="text-2xl font-bold">0</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="charCountLabel">Characters</div>
+                                <div data-stat="char-count" class="text-2xl font-bold">0</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="readingTimeLabel">Reading Time (sec)</div>
+                                <div data-stat="reading-time" class="text-2xl font-bold">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <h3 class="text-lg font-semibold text-center mb-2" data-lang-key="detailedStatsTitle">Detailed Analysis</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-sm" data-lang-key="readabilityScoreLabel">Readability</div>
+                                <div id="readability-score" class="text-2xl font-bold">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="avgSentenceLengthLabel">Avg. Sentence</div>
+                                <div id="avg-sentence-length" class="text-2xl font-bold">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="syllableCountLabel">Syllables</div>
+                                <div id="syllable-count" class="text-2xl font-bold">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm" data-lang-key="lexicalDiversityLabel">Lexical Diversity</div>
+                                <div id="lexical-diversity" class="text-2xl font-bold">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        {/* Modals and other hidden elements */}
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+        
+        <!-- Auth Modal -->
+        <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                    <h2 id="auth-modal-title" class="text-xl font-semibold mb-4" data-lang-key="loginTitle">Login</h2>
+                    <form id="auth-form">
+                        <div class="mb-4">
+                            <md-outlined-text-field id="email-input" type="email" label="Email" required class="w-full"></md-outlined-text-field>
+                        </div>
+                        <div class="mb-4">
+                            <md-outlined-text-field id="password-input" type="password" label="Password" required class="w-full" supporting-text="Password must be at least 8 characters long and include uppercase, lowercase, number, and special character"></md-outlined-text-field>
+                        </div>
+                        <div class="mb-4">
+                            <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <md-filled-button type="submit" id="auth-submit-button" class="flex-1" data-lang-key="loginButton">Login</md-filled-button>
+                            <md-outlined-button type="button" id="auth-cancel-button" data-lang-key="cancelButton">Cancel</md-outlined-button>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <button type="button" id="auth-switch-button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" data-lang-key="switchToSignup">Don't have an account? Sign up</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmation-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                    <h3 id="confirmation-modal-title" class="text-lg font-semibold mb-2"></h3>
+                    <p id="confirmation-modal-message" class="text-slate-600 dark:text-slate-400 mb-4"></p>
+                    <div class="flex gap-2 justify-end">
+                        <md-outlined-button id="confirmation-modal-cancel-button" data-lang-key="cancelButton">Cancel</md-outlined-button>
+                        <md-filled-button id="confirmation-modal-confirm-button" data-lang-key="confirmButton">Confirm</md-filled-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Box -->
+        <div id="custom-message-box" class="message-box fixed top-5 left-1/2 -translate-x-1/2 p-4 rounded-md shadow-lg z-[1000] hidden">
+            <span></span>
+        </div>
+
+        <!-- Welcome Dialog -->
+        <div id="welcome-dialog" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
+                    <h2 class="text-2xl font-bold mb-4" data-lang-key="welcomeTitle">Welcome to ReadMind!</h2>
+                    <div class="space-y-4 text-slate-600 dark:text-slate-400">
+                        <p data-lang-key="welcomeMessage1">ReadMind is your personal speed reading trainer and knowledge management system.</p>
+                        <p data-lang-key="welcomeMessage2">Create documents, practice speed reading, and improve your reading skills with our advanced text analysis.</p>
+                        <p data-lang-key="welcomeMessage3">Sign up for an account to save your documents and settings across devices.</p>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <md-filled-button onclick="document.getElementById('welcome-dialog').classList.add('hidden')" data-lang-key="getStartedButton">Get Started</md-filled-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.js" integrity="sha512-ksSfTk6JIdsze75yZ8c+yDVLu09SNefa9IicxEE+HZvWo9kLPY1vrRlmucEMHQReWmEdKqusQWaDMpkTb3M2ug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.min.js" integrity="sha512-wfLPygjFpzaOCfVAolFa7bjZz9D9TLbaD56Jv0/j/tO8eRI5Pg0z8SIKmjrHIR/Pg0aed9onikOcyPcsYKqpbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <!-- Removed text-readability ESM to avoid import errors in browser. Using local implementation -->
+        <script src="translations.js"></script>
+        <script type="module" src="dist/bundle.js"></script>
+    </body>
+</html>

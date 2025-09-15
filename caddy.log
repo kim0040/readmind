@@ -1,0 +1,11 @@
+{"level":"info","ts":1755409715.1167214,"msg":"maxprocs: Leaving GOMAXPROCS=4: CPU quota undefined"}
+{"level":"info","ts":1755409715.1174695,"msg":"GOMEMLIMIT is updated","package":"github.com/KimMachineGun/automemlimit/memlimit","GOMEMLIMIT":7511169024,"previous":9223372036854775807}
+{"level":"info","ts":1755409715.1175494,"msg":"using adjacent Caddyfile"}
+{"level":"info","ts":1755409715.1185849,"msg":"adapted config to JSON","adapter":"caddyfile"}
+{"level":"info","ts":1755409715.119968,"logger":"admin","msg":"admin endpoint started","address":"localhost:2019","enforce_origin":false,"origins":["//[::1]:2019","//127.0.0.1:2019","//localhost:2019"]}
+{"level":"info","ts":1755409715.1200953,"logger":"http.auto_https","msg":"server is listening only on the HTTPS port but has no TLS connection policies; adding one to enable TLS","server_name":"srv0","https_port":443}
+{"level":"info","ts":1755409715.120108,"logger":"http.auto_https","msg":"enabling automatic HTTP->HTTPS redirects","server_name":"srv0"}
+{"level":"info","ts":1755409715.1203935,"logger":"tls.cache.maintenance","msg":"started background certificate maintenance","cache":"0xc000425e80"}
+{"level":"warn","ts":1755409715.1289673,"logger":"pki.ca.local","msg":"installing root certificate (you might be prompted for password)","path":"storage:pki/authorities/local/root.crt"}
+{"level":"info","ts":1755409715.1317837,"msg":"warning: \"certutil\" is not available, install \"certutil\" with \"apt install libnss3-tools\" or \"yum install nss-tools\" and try again"}
+{"level":"info","ts":1755409715.1317952,"msg":"define JAVA_HOME environment variable to use the Java trust"}
