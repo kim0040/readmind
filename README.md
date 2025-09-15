@@ -1,146 +1,106 @@
-# ReadMind - 당신의 두뇌를 위한 디지털 헬스장
+# 🧠 ReadMind - 차세대 속독 & 지식 관리 플랫폼
 
-정보의 홍수 속에서, 당신은 얼마나 효과적으로 읽고 있나요? **ReadMind**는 단순히 글자를 빠르게 보여주는 도구가 아닙니다. 당신의 읽기 능력을 체계적으로 훈련하고, 중요한 정보를 놓치지 않도록 돕는 **개인 맞춤형 속독 트레이너이자 지식 관리 시스템**입니다.
+> **당신의 읽기 능력을 혁신하는 AI 기반 속독 트레이너**
 
-매일 쏟아지는 뉴스 기사, 업무 이메일, 전공 서적까지. ReadMind를 통해 당신의 읽기 습관을 혁신하고, 습득한 지식을 자신만의 노트에 기록하고 관리해보세요. 이 모든 데이터는 당신만이 접근할 수 있는 개인 서버에 안전하게 저장됩니다.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-## ✨ 주요 기능 (Key Features)
+---
 
-### 📝 **지능형 마크다운 에디터**
-- **실시간 마크다운 편집**: GitHub 스타일의 마크다운 에디터로 문서를 작성하고 실시간 미리보기를 제공합니다
-- **문서 관리 시스템**: 생성, 읽기, 수정, 삭제(CRUD) 기능을 통해 개인 지식 베이스를 구축할 수 있습니다
-- **자동 저장**: 작성 중인 문서가 자동으로 저장되어 데이터 손실을 방지합니다
-- **클라우드 동기화**: 로그인한 사용자의 문서는 서버에 안전하게 저장되어 어디서든 접근 가능합니다
+## 🎯 **프로젝트 개요**
 
-### 🚀 **고급 속독 훈련 시스템**
-- **두 가지 읽기 모드**:
-  - **플래시 모드**: 단어를 하나씩 중앙에 표시하여 집중력을 극대화
-  - **텔레프롬프터 모드**: 실제 책처럼 여러 단어를 한 번에 표시하여 자연스러운 읽기 연습
-- **정밀한 속도 제어**: WPM(분당 단어 수) 50-1000 범위에서 세밀하게 조절 가능
-- **단어 묶음(Chunking)**: 1-10개 단어를 묶어서 표시하여 읽기 효율성 향상
-- **시선 고정점**: 단어 내 특정 위치에 시선을 고정하여 읽기 속도 향상
+ReadMind는 현대인의 정보 과부하 문제를 해결하기 위해 설계된 **종합적인 속독 훈련 및 지식 관리 시스템**입니다. 단순한 속독 도구를 넘어서, 개인화된 학습 경험과 안전한 데이터 관리를 제공하는 완전한 웹 애플리케이션입니다.
 
-### 🌍 **다국어 텍스트 분석**
-- **영어**: 공백 기반 단어 분리로 자연스러운 읽기 흐름 제공
-- **한국어**: 한글 특성을 고려한 글자 단위 분리로 정확한 속독 지원
-- **일본어**: Kuromoji.js 형태소 분석기를 통한 의미 단위 분리
-- **중국어**: 글자 단위 분리로 한자 텍스트 처리
-- **자동 정제**: URL, 이메일, 특수기호 등 읽기 방해 요소 자동 제거
+### 🌟 **핵심 가치**
+- **🚀 읽기 속도 향상**: 과학적으로 검증된 속독 기법 적용
+- **🧠 이해도 유지**: 속도와 함께 내용 이해도도 고려한 훈련
+- **📚 지식 관리**: 마크다운 기반 개인 노트 시스템
+- **🔒 개인정보 보호**: 모든 데이터를 개인 서버에 안전하게 저장
 
-### 🎨 **Material 3 디자인 시스템**
-- **현대적 UI**: Google Material 3 디자인 가이드라인을 완전히 준수
-- **다크/라이트 모드**: 시스템 설정에 따른 자동 테마 전환 및 수동 전환 지원
-- **다양한 색상 테마**: Blue, Green, Purple, Orange 테마 제공
-- **반응형 디자인**: 모바일, 태블릿, 데스크톱 모든 기기에서 최적화된 경험
-- **접근성**: ARIA 속성과 키보드 네비게이션으로 모든 사용자가 접근 가능
+---
+
+## ✨ **주요 기능**
+
+### 🎨 **현대적 사용자 인터페이스**
+- **Material Design 3**: Google의 최신 디자인 시스템 완전 적용
+- **다크/라이트 모드**: 시간과 환경에 맞는 자동/수동 테마 전환
+- **4가지 컬러 테마**: Blue, Green, Purple, Orange 사용자 맞춤 선택
+- **반응형 디자인**: 모바일, 태블릿, 데스크톱 완벽 지원
+- **접근성 최적화**: WCAG 2.1 AA 등급 준수
+
+### ⚡ **고급 속독 엔진**
+- **플래시 모드**: 단어별 집중 훈련으로 최대 효율 달성
+- **텔레프롬프터 모드**: 자연스러운 읽기 흐름 유지 훈련
+- **적응형 속도**: 단어 길이와 복잡도에 따른 자동 속도 조절
+- **시선 고정점**: 단어 내 최적 위치 표시로 안구 운동 최소화
+- **WPM 50-500**: 초보자부터 전문가까지 맞춤 속도 설정
+
+### 🌐 **다국어 텍스트 처리**
+- **한국어**: 자연스러운 어절 단위 분할 (3-4글자 최적화)
+- **영어**: 공백 기반 정확한 단어 분리
+- **일본어**: Kuromoji.js 형태소 분석기 통합
+- **마크다운 정제**: 헤더, 링크, 코드 등 읽기 방해 요소 자동 제거
+
+### 📝 **통합 지식 관리 시스템**
+- **실시간 마크다운 에디터**: SimpleMDE 기반 WYSIWYG 편집
+- **자동 저장**: 작성 중 데이터 손실 방지
+- **클라우드 동기화**: 로그인 사용자 데이터 서버 저장
+- **실시간 통계**: 글자 수, 단어 수, 예상 읽기 시간 표시
 
 ### 🔐 **엔터프라이즈급 보안**
-- **JWT 인증**: 24시간 만료 토큰과 자동 갱신 시스템
-- **비밀번호 암호화**: bcryptjs를 사용한 솔트 포함 해싱
-- **reCAPTCHA**: 봇 공격 방지를 위한 Google reCAPTCHA v2 통합
+- **JWT 인증**: 24시간 만료 + 자동 갱신 시스템
+- **bcryptjs 암호화**: 솔트 포함 비밀번호 해싱
 - **Rate Limiting**: API 요청 제한으로 서버 보호
-- **HTTPS 강제**: 모든 통신의 암호화 보장
-- **보안 헤더**: XSS, CSRF, 클릭재킹 등 다양한 공격 방어
+- **보안 헤더**: CSP, XSS, CSRF 등 종합 보안 적용
+- **HTTPS 강제**: 모든 통신 암호화 보장
 
-### ⚡ **고성능 최적화**
-- **SQLite 인덱싱**: 데이터베이스 쿼리 성능 최적화
-- **JavaScript 번들링**: Rollup을 사용한 코드 압축 및 최적화
-- **CDN 활용**: 외부 라이브러리 CDN 로드로 서버 부하 감소
-- **메모리 관리**: 효율적인 DOM 조작과 이벤트 리스너 관리
+---
 
-## 🛠️ 기술 스택 (Technology Stack)
+## 🛠️ **기술 스택**
 
-### Frontend
-- **Vanilla JavaScript (ES6 Modules)**: 프레임워크 없는 순수 JavaScript로 가볍고 빠른 성능
-- **Material Web Components**: Google의 공식 Material 3 컴포넌트 라이브러리
-- **Tailwind CSS**: 유틸리티-우선 CSS 프레임워크
+### **Frontend**
+- **HTML5**: 시멘틱 마크업과 웹 접근성
+- **CSS3**: CSS Grid, Flexbox, CSS Variables
+- **JavaScript ES6+**: 모듈 시스템, async/await
+- **Material Web Components**: Google 공식 웹 컴포넌트
+- **Tailwind CSS**: 유틸리티 퍼스트 CSS 프레임워크
+- **Rollup**: 모던 번들러로 코드 최적화
+
+### **Backend**
+- **Node.js 18+**: 최신 LTS 버전 기반
+- **Express.js**: 경량 웹 프레임워크
+- **SQLite3**: 임베디드 데이터베이스
+- **JWT**: 무상태 인증 시스템
+- **bcryptjs**: 비밀번호 암호화
+
+### **External Libraries**
 - **SimpleMDE**: 마크다운 에디터
-- **Kuromoji.js**: 일본어 형태소 분석기
-- **Rollup**: JavaScript 번들러
+- **Kuromoji.js**: 일본어 형태소 분석
+- **Material Icons**: Google 아이콘 세트
 
-### Backend
-- **Node.js & Express.js**: JavaScript 서버 런타임과 웹 프레임워크
-- **SQLite**: 파일 기반 경량 데이터베이스
-- **JWT**: 토큰 기반 인증
-- **bcryptjs**: 비밀번호 해싱
-- **express-rate-limit**: API 요청 제한
-- **CORS**: 크로스 오리진 리소스 공유
+---
 
-### Infrastructure
-- **Caddy**: 자동 HTTPS 웹 서버
-- **Docker**: 컨테이너화 (선택사항)
+## 🚀 **설치 및 실행 가이드**
 
-## 📂 프로젝트 구조 (Project Structure)
+### **1. 시스템 요구사항**
+- **Node.js**: v18.0.0 이상
+- **npm**: v8.0.0 이상
+- **운영체제**: Windows 10+, macOS 10.15+, Ubuntu 18.04+
+- **브라우저**: Chrome 90+, Firefox 88+, Safari 14+
 
-```
-readmind-main/
-├── 📁 backend/                    # 백엔드 서버 코드
-│   ├── 📄 server.js              # Express 서버 메인 파일
-│   ├── 📄 database.js            # SQLite 데이터베이스 설정
-│   ├── 📁 middleware/            # 미들웨어
-│   │   ├── 📄 auth.js           # JWT 인증 미들웨어
-│   │   └── 📄 captcha_verification.js  # reCAPTCHA 검증
-│   ├── 📁 routes/               # API 라우트
-│   │   ├── 📄 auth.js          # 인증 관련 API
-│   │   ├── 📄 documents.js     # 문서 관리 API
-│   │   ├── 📄 settings.js      # 사용자 설정 API
-│   │   └── 📄 health.js        # 헬스체크 API
-│   └── 📄 package.json         # 백엔드 의존성
-├── 📁 public/                   # 프론트엔드 정적 파일
-│   ├── 📄 index.html           # 메인 HTML 파일
-│   ├── 📄 main.js              # 애플리케이션 진입점
-│   ├── 📄 state.js             # 전역 상태 관리
-│   ├── 📄 save_manager.js      # 설정 저장 관리
-│   ├── 📄 auth.js              # 인증 관련 함수
-│   ├── 📄 ui.js                # UI 로직 및 DOM 조작
-│   ├── 📄 reader.js            # 속독 엔진
-│   ├── 📄 text_handler.js      # 텍스트 분석 및 처리
-│   ├── 📄 document_manager.js  # 문서 관리
-│   ├── 📄 translations.js      # 다국어 번역
-│   ├── 📄 themes.css           # Material 3 테마
-│   ├── 📁 dist/               # 번들된 JavaScript
-│   │   └── 📄 bundle.js       # 최적화된 번들 파일
-│   └── 📄 favicon.png         # 사이트 아이콘
-├── 📄 package.json            # 프로젝트 메타데이터
-├── 📄 rollup.config.js        # 번들러 설정
-├── 📄 Caddyfile              # Caddy 웹서버 설정
-├── 📄 setup.sh               # 자동 설치 스크립트
-└── 📄 README.md              # 프로젝트 문서
-```
+### **2. 로컬 개발 환경 설정**
 
-## 🚀 설치 및 실행 방법 (Installation & Setup)
-
-### 1. 시스템 요구사항
-- **Node.js**: 18.0.0 이상
-- **npm**: 8.0.0 이상
-- **운영체제**: Linux, macOS, Windows (Ubuntu 20.04+ 권장)
-
-### 2. 자동 설치 (권장)
-
+#### **A. 저장소 클론**
 ```bash
-# 저장소 클론
-git clone https://github.com/your-username/readmind-main.git
-cd readmind-main
-
-# 실행 권한 부여
-chmod +x setup.sh
-
-# 자동 설치 실행
-./setup.sh
+# GitHub에서 프로젝트 다운로드
+git clone https://github.com/kim0040/readmind.git
+cd readmind
 ```
 
-자동 설치 스크립트가 다음 작업을 수행합니다:
-- Node.js 및 npm 의존성 설치
-- 환경 변수 파일(.env) 생성
-- JWT 시크릿 키 자동 생성
-- 데이터베이스 초기화
-- 서버 시작
-
-### 3. 수동 설치
-
-#### 3.1 의존성 설치
+#### **B. 의존성 설치**
 ```bash
-# 프로젝트 루트에서
+# 프론트엔드 의존성 설치
 npm install
 
 # 백엔드 의존성 설치
@@ -149,270 +109,450 @@ npm install
 cd ..
 ```
 
-#### 3.2 환경 변수 설정
+#### **C. 환경 변수 설정**
 ```bash
-# .env 파일 생성
-cat > .env << EOF
-JWT_SECRET=$(openssl rand -hex 32)
+# 백엔드 환경 변수 파일 생성
+cd backend
+nano .env
+```
+
+`.env` 파일 내용:
+```env
+# 개발 환경 설정
 NODE_ENV=development
 PORT=3000
 CORS_ORIGIN=*
-EOF
+
+# JWT 보안 키 (개발용)
+JWT_SECRET=development-secret-key-change-in-production
+
+# 선택사항: reCAPTCHA (개발 시 생략 가능)
+# RECAPTCHA_SECRET_KEY=your-recaptcha-secret-key
 ```
 
-#### 3.3 데이터베이스 초기화
+#### **D. 애플리케이션 빌드 및 실행**
 ```bash
-# 백엔드 서버 실행 (데이터베이스 자동 생성)
+# 프론트엔드 빌드
+npm run build
+
+# 백엔드 서버 시작
 cd backend
 node server.js
 ```
 
-#### 3.4 프론트엔드 빌드
-```bash
-# 새 터미널에서
-npm run build
-```
+#### **E. 브라우저에서 확인**
+- **주소**: http://localhost:3000
+- **API 상태**: http://localhost:3000/api/health
 
-### 4. 서버 실행
+### **3. 개발 환경에서 테스트하기**
 
-#### 개발 모드
-```bash
-# 백엔드 서버 실행
-cd backend
-npm run dev
+#### **WebStorm에서 테스트 (macOS)**
+1. **프로젝트 열기**: WebStorm에서 `readmind` 폴더 열기
+2. **터미널 열기**: View → Tool Windows → Terminal
+3. **서버 실행**:
+   ```bash
+   cd backend && node server.js
+   ```
+4. **브라우저 테스트**: 내장 브라우저 또는 외부 브라우저에서 http://localhost:3000 접속
+5. **실시간 개발**: 코드 수정 후 브라우저 새로고침으로 변경사항 확인
 
-# 또는
-node server.js
-```
-
-#### 프로덕션 모드
-```bash
-# 전체 애플리케이션 실행
-npm start
-```
-
-### 5. 웹서버 설정 (Caddy)
-
-#### 5.1 Caddy 설치
-```bash
-# Ubuntu/Debian
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update
-sudo apt install caddy
-
-# macOS
-brew install caddy
-
-# Windows
-choco install caddy
-```
-
-#### 5.2 Caddy 설정
-```bash
-# Caddyfile 설정
-cat > Caddyfile << EOF
-your-domain.com {
-    root * /path/to/readmind-main/public
-    file_server
-    try_files {path} /index.html
-    
-    reverse_proxy /api/* localhost:3000
-    
-    header {
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-    }
-}
-EOF
-
-# Caddy 실행
-sudo caddy run --config Caddyfile
-```
-
-## 🎯 사용 방법 (How to Use)
-
-### 1. 첫 방문
-1. 브라우저에서 `http://localhost:3000` 또는 설정한 도메인에 접속
-2. 환영 다이얼로그에서 "Get Started" 클릭
-3. 우측 상단의 "Login" 버튼 클릭하여 계정 생성
-
-### 2. 계정 생성
-1. "Don't have an account? Sign up" 클릭
-2. 이메일과 강력한 비밀번호 입력 (최소 8자, 대소문자, 숫자, 특수문자 포함)
-3. reCAPTCHA 완료 후 "Sign up" 클릭
-
-### 3. 문서 작성
-1. 메인 에디터에 마크다운 문법으로 텍스트 작성
-2. 실시간 미리보기로 결과 확인
-3. 문서는 자동으로 저장됨
-
-### 4. 속독 훈련
-1. 에디터에 읽고 싶은 텍스트 입력
-2. 읽기 모드 선택 (Flash 또는 Teleprompter)
-3. WPM 슬라이더로 속도 조절
-4. "Start" 버튼으로 훈련 시작
-5. "Pause"로 일시정지, "Reset"으로 초기화
-
-### 5. 설정 관리
-- **테마**: 우측 상단 테마 선택기로 색상 변경
-- **언어**: 언어 선택기로 한국어/영어/일본어 전환
-- **다크모드**: 다크모드 토글 버튼으로 전환
-- **폰트**: 폰트 패밀리와 크기 조절
-
-## 🔧 개발자 가이드 (Developer Guide)
-
-### 코드 구조 설명
-
-#### Frontend 아키텍처
-```
-main.js (진입점)
-├── state.js (전역 상태)
-├── save_manager.js (설정 저장)
-├── auth.js (인증 관리)
-├── ui.js (UI 로직)
-├── reader.js (속독 엔진)
-├── text_handler.js (텍스트 분석)
-├── document_manager.js (문서 관리)
-└── translations.js (다국어)
-```
-
-#### Backend 아키텍처
-```
-server.js (Express 서버)
-├── database.js (SQLite 설정)
-├── middleware/
-│   ├── auth.js (JWT 검증)
-│   └── captcha_verification.js (reCAPTCHA)
-└── routes/
-    ├── auth.js (인증 API)
-    ├── documents.js (문서 API)
-    ├── settings.js (설정 API)
-    └── health.js (헬스체크)
-```
-
-### 주요 함수 설명
-
-#### Frontend
-- `initializeApp()`: 애플리케이션 초기화
-- `scheduleSave()`: 설정 자동 저장 (1.5초 디바운스)
-- `startReadingFlow()`: 속독 훈련 시작
-- `updateTextStats()`: 텍스트 통계 업데이트
-- `segmentKoreanText()`: 한국어 텍스트 분리
-
-#### Backend
-- `setupDatabase()`: SQLite 데이터베이스 초기화
-- `validatePassword()`: 비밀번호 정책 검증
-- `authenticateToken()`: JWT 토큰 검증
-- `rateLimit()`: API 요청 제한
-
-### 데이터베이스 스키마
-
-#### users 테이블
-```sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    settings TEXT DEFAULT '{}'
-);
-```
-
-#### documents 테이블
-```sql
-CREATE TABLE documents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    content TEXT DEFAULT '',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-```
-
-#### 인덱스
-```sql
-CREATE INDEX idx_documents_user_id ON documents (user_id);
-CREATE INDEX idx_documents_updated_at ON documents (updated_at);
-CREATE INDEX idx_users_email ON users (email);
-```
-
-## 🐛 문제 해결 (Troubleshooting)
-
-### 일반적인 문제
-
-#### 1. 서버가 시작되지 않음
-```bash
-# 포트 확인
-lsof -i :3000
-
-# 프로세스 종료
-pkill -f "node server.js"
-
-# 다시 시작
-cd backend && node server.js
-```
-
-#### 2. 데이터베이스 오류
-```bash
-# 데이터베이스 파일 삭제 후 재생성
-rm database.sqlite
-cd backend && node server.js
-```
-
-#### 3. 번들 파일 오류
-```bash
-# 번들 재생성
-npm run build
-```
-
-#### 4. 의존성 오류
-```bash
-# node_modules 삭제 후 재설치
-rm -rf node_modules backend/node_modules
-npm install
-cd backend && npm install
-```
-
-### 로그 확인
-```bash
-# 서버 로그
-tail -f backend.log
-
-# Caddy 로그
-sudo journalctl -u caddy -f
-```
-
-## 🤝 기여하기 (Contributing)
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 라이선스 (License)
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
-
-## 📞 지원 (Support)
-
-- **이슈 리포트**: [GitHub Issues](https://github.com/your-username/readmind-main/issues)
-- **기능 요청**: [GitHub Discussions](https://github.com/your-username/readmind-main/discussions)
-- **이메일**: support@readmind.app
-
-## 🙏 감사의 말 (Acknowledgments)
-
-- [Material Design](https://material.io/) - UI 디자인 가이드라인
-- [Kuromoji.js](https://github.com/takuyaa/kuromoji.js) - 일본어 형태소 분석
-- [SimpleMDE](https://github.com/sparksuite/simplemde-markdown-editor) - 마크다운 에디터
-- [Tailwind CSS](https://tailwindcss.com/) - CSS 프레임워크
-- [Express.js](https://expressjs.com/) - 웹 프레임워크
+#### **기능 테스트 체크리스트**
+- [ ] **UI 테마**: 라이트/다크 모드 전환
+- [ ] **언어 변경**: 한국어 ↔ 영어 ↔ 일본어
+- [ ] **회원가입/로그인**: 계정 생성 및 인증
+- [ ] **텍스트 입력**: 마크다운 에디터에 텍스트 입력
+- [ ] **속독 기능**: 플래시/텔레프롬프터 모드 실행
+- [ ] **속도 조절**: WPM 슬라이더로 속도 변경
+- [ ] **일시정지/재개**: 중단 후 이어서 읽기
+- [ ] **통계 확인**: 글자 수, 단어 수, 예상 시간
 
 ---
 
-**ReadMind**와 함께 당신의 읽기 능력을 한 단계 업그레이드하세요! 🚀
+## 🌐 **서버 배포 가이드**
+
+### **Option 1: 간단한 VPS 배포**
+
+#### **1단계: 서버 준비**
+```bash
+# Ubuntu/Debian 서버에서
+sudo apt update && sudo apt upgrade -y
+sudo apt install nodejs npm git -y
+
+# Node.js 최신 LTS 설치
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+#### **2단계: 프로젝트 배포**
+```bash
+# 프로젝트 클론
+git clone https://github.com/kim0040/readmind.git
+cd readmind
+
+# 프로덕션 의존성 설치 및 빌드
+npm run deploy:full
+
+# 프로덕션 환경변수 설정
+cd backend
+sudo nano .env
+```
+
+**프로덕션 .env 설정**:
+```env
+NODE_ENV=production
+PORT=3000
+CORS_ORIGIN=https://yourdomain.com
+
+# 보안: 강력한 JWT 키 생성 필수!
+JWT_SECRET=매우-긴-랜덤-문자열-최소-64자-이상
+
+# 선택: reCAPTCHA
+RECAPTCHA_SECRET_KEY=your-production-recaptcha-key
+```
+
+**안전한 JWT 키 생성**:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+#### **3단계: PM2로 프로세스 관리**
+```bash
+# PM2 전역 설치
+sudo npm install -g pm2
+
+# PM2로 서버 시작
+pm2 start ecosystem.config.js
+
+# 시스템 부팅 시 자동 시작
+pm2 save
+pm2 startup
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USER --hp $HOME
+```
+
+#### **4단계: Nginx 리버스 프록시 설정**
+```bash
+# Nginx 설치
+sudo apt install nginx -y
+
+# 설정 파일 생성
+sudo nano /etc/nginx/sites-available/readmind
+```
+
+**Nginx 설정**:
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    # 정적 파일 직접 서빙
+    location / {
+        root /home/ubuntu/readmind/public;
+        try_files $uri $uri/ /index.html;
+        
+        # 브라우저 캐싱
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+
+    # API 요청 프록시
+    location /api/ {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+```bash
+# 설정 활성화
+sudo ln -s /etc/nginx/sites-available/readmind /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### **5단계: SSL 인증서 설정 (Let's Encrypt)**
+```bash
+# Certbot 설치
+sudo apt install certbot python3-certbot-nginx -y
+
+# SSL 인증서 발급
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+# 자동 갱신 설정
+sudo crontab -e
+# 추가: 0 12 * * * /usr/bin/certbot renew --quiet
+```
+
+### **Option 2: Docker 배포**
+
+#### **Dockerfile 생성**
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 패키지 파일 복사 및 의존성 설치
+COPY package*.json ./
+COPY backend/package*.json ./backend/
+RUN npm ci --only=production
+RUN cd backend && npm ci --only=production
+
+# 소스 코드 복사
+COPY . .
+
+# 프론트엔드 빌드
+RUN npm run build
+
+# 포트 노출
+EXPOSE 3000
+
+# 환경 변수
+ENV NODE_ENV=production
+
+# 서버 시작
+CMD ["node", "backend/server.js"]
+```
+
+#### **Docker Compose 설정**
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  readmind:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+    volumes:
+      - ./data:/app/backend/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - readmind
+    restart: unless-stopped
+```
+
+#### **Docker 실행**
+```bash
+# 환경 변수 설정
+echo "JWT_SECRET=$(openssl rand -hex 64)" > .env
+echo "CORS_ORIGIN=https://yourdomain.com" >> .env
+
+# 컨테이너 빌드 및 실행
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f
+```
+
+---
+
+## 🔧 **운영 및 모니터링**
+
+### **서버 상태 확인**
+```bash
+# PM2 프로세스 상태
+pm2 status
+pm2 logs readmind-backend
+
+# 시스템 리소스
+htop
+
+# 디스크 사용량
+df -h
+
+# Nginx 상태
+sudo systemctl status nginx
+
+# 실시간 로그 모니터링
+tail -f /var/log/nginx/access.log
+```
+
+### **백업 및 복구**
+```bash
+# 데이터베이스 백업
+cp backend/database.sqlite backup/database-$(date +%Y%m%d).sqlite
+
+# 전체 프로젝트 백업
+tar -czf readmind-backup-$(date +%Y%m%d).tar.gz readmind/ --exclude=node_modules
+```
+
+### **업데이트 방법**
+```bash
+# 최신 코드 가져오기
+git pull origin main
+
+# 의존성 업데이트
+npm install && cd backend && npm install && cd ..
+
+# 프론트엔드 재빌드
+npm run build
+
+# 서버 재시작
+pm2 restart readmind-backend
+```
+
+---
+
+## 🛡️ **보안 고려사항**
+
+### **필수 보안 설정**
+1. **JWT_SECRET**: 반드시 64자 이상의 랜덤 문자열 사용
+2. **HTTPS**: SSL 인증서 적용 (Let's Encrypt 무료)
+3. **방화벽**: 필요한 포트(80, 443, 22)만 열기
+4. **정기 업데이트**: OS 및 Node.js 보안 패치 적용
+5. **백업**: 주기적인 데이터베이스 백업
+
+### **추가 보안 강화**
+```bash
+# 방화벽 설정
+sudo ufw enable
+sudo ufw allow 22   # SSH
+sudo ufw allow 80   # HTTP
+sudo ufw allow 443  # HTTPS
+
+# fail2ban 설치 (무차별 대입 공격 방어)
+sudo apt install fail2ban -y
+sudo systemctl enable fail2ban
+```
+
+---
+
+## 📊 **성능 최적화**
+
+### **프론트엔드 최적화**
+- **번들 크기**: Rollup으로 JavaScript 최적화
+- **이미지 최적화**: WebP 포맷 사용 권장
+- **CDN 활용**: 외부 라이브러리 CDN 로드
+- **브라우저 캐싱**: 정적 파일 장기 캐싱
+
+### **백엔드 최적화**
+- **SQLite 인덱스**: 자주 조회되는 컬럼 인덱싱
+- **연결 풀링**: 데이터베이스 연결 관리
+- **메모리 제한**: PM2로 메모리 사용량 제한
+- **로그 로테이션**: 로그 파일 크기 관리
+
+---
+
+## 🤝 **기여 가이드라인**
+
+### **개발 환경 설정**
+1. **Fork**: GitHub에서 저장소 포크
+2. **Clone**: 개인 저장소 클론
+3. **Branch**: 기능별 브랜치 생성
+4. **Test**: 로컬에서 철저한 테스트
+5. **PR**: Pull Request 제출
+
+### **코드 스타일**
+- **ESLint**: JavaScript 코딩 컨벤션
+- **Prettier**: 코드 포맷팅 자동화
+- **JSDoc**: 함수 및 클래스 문서화
+- **Semantic Versioning**: 버전 관리 규칙
+
+---
+
+## 📈 **로드맵**
+
+### **v1.1 (계획)**
+- [ ] **실시간 협업**: 다중 사용자 동시 편집
+- [ ] **AI 요약**: GPT 기반 자동 텍스트 요약
+- [ ] **읽기 분석**: 개인별 읽기 패턴 분석
+- [ ] **모바일 앱**: React Native 기반 네이티브 앱
+
+### **v1.2 (계획)**
+- [ ] **음성 인식**: Speech-to-Text 텍스트 입력
+- [ ] **다중 언어**: 더 많은 언어 지원 확대
+- [ ] **클라우드 연동**: Google Drive, Dropbox 연동
+- [ ] **API 제공**: 외부 서비스 연동 API
+
+---
+
+## 📄 **라이선스**
+
+이 프로젝트는 [MIT 라이선스](LICENSE) 하에 배포됩니다.
+
+```
+MIT License
+
+Copyright (c) 2024 ReadMind Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 🙋‍♂️ **지원 및 문의**
+
+### **문제 신고**
+- **GitHub Issues**: [이슈 등록](https://github.com/kim0040/readmind/issues)
+- **버그 리포트**: 재현 가능한 상세 정보 포함
+- **기능 제안**: Enhancement 라벨로 요청
+
+### **커뮤니티**
+- **Discussions**: GitHub Discussions에서 질문과 토론
+- **이메일**: hun1234kim@gmail.com
+- **문서**: [GitHub Wiki](https://github.com/kim0040/readmind/wiki)
+
+---
+
+## 📚 **참고 자료**
+
+### **기술 문서**
+- [Material Design 3](https://m3.material.io/)
+- [Express.js 가이드](https://expressjs.com/ko/)
+- [SQLite 문서](https://www.sqlite.org/docs.html)
+- [JWT 표준](https://tools.ietf.org/html/rfc7519)
+
+### **관련 연구**
+- [속독 기법 연구](https://en.wikipedia.org/wiki/Speed_reading)
+- [시선 추적 연구](https://en.wikipedia.org/wiki/Eye_tracking)
+- [인지 부하 이론](https://en.wikipedia.org/wiki/Cognitive_load)
+
+---
+
+<div align="center">
+
+**🎯 ReadMind로 당신의 읽기 능력을 한 단계 업그레이드하세요! 🚀**
+
+[![GitHub stars](https://img.shields.io/github/stars/kim0040/readmind?style=social)](https://github.com/kim0040/readmind/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/kim0040/readmind?style=social)](https://github.com/kim0040/readmind/network)
+
+Made with ❤️ by ReadMind Team
+
+</div>
