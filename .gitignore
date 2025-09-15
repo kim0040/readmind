@@ -58,3 +58,16 @@ temp/
 
 # OS generated files
 Icon?
+
+# Development artifacts
+setup.sh
+traffic-limiter.sh
+agent.md
+
+# Keep Caddyfile - it's needed for HTTPS!
+# Caddyfile
+
+# Backup files
+*.backup
+*.bak
+*~

@@ -170,7 +170,34 @@ node server.js
 
 ## 🌐 **서버 배포 가이드**
 
-### **Option 1: 간단한 VPS 배포**
+### **Option 1: Caddy 웹서버 배포 (HTTPS 자동, 권장)**
+
+#### **Caddy 장점**
+- 🔒 **자동 HTTPS**: Let's Encrypt 인증서 자동 발급 및 갱신
+- ⚡ **간단한 설정**: Caddyfile 하나로 모든 설정 완료
+- 🛡️ **보안**: 기본적으로 안전한 설정 적용
+
+#### **Caddy 설치 및 설정**
+```bash
+# Caddy 설치 (Ubuntu/Debian)
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update && sudo apt install caddy
+
+# Caddyfile 설정 (프로젝트에 포함된 파일 사용)
+sudo cp Caddyfile /etc/caddy/Caddyfile
+
+# 도메인 수정 (yourdomain.com을 실제 도메인으로 변경)
+sudo nano /etc/caddy/Caddyfile
+
+# Caddy 시작
+sudo systemctl enable caddy
+sudo systemctl start caddy
+sudo systemctl status caddy
+```
+
+### **Option 2: Nginx 수동 배포**
 
 #### **1단계: 서버 준비**
 ```bash
@@ -412,13 +439,72 @@ npm run build
 pm2 restart readmind-backend
 ```
 
+### **완전 삭제 방법**
+
+⚠️ **경고: 이 작업은 되돌릴 수 없으며, 모든 사용자 데이터와 문서를 영구적으로 삭제합니다.**
+
+#### **서버에서 완전 제거**
+```bash
+# 1. 실행 중인 서비스 중지
+pm2 stop readmind-backend
+pm2 delete readmind-backend
+
+# 2. Nginx 설정 제거 (사용한 경우)
+sudo rm /etc/nginx/sites-enabled/readmind
+sudo rm /etc/nginx/sites-available/readmind
+sudo nginx -t && sudo systemctl reload nginx
+
+# 3. SSL 인증서 제거 (Let's Encrypt 사용한 경우)
+sudo certbot delete --cert-name yourdomain.com
+
+# 4. 프로젝트 폴더 완전 삭제
+rm -rf /path/to/your/readmind
+
+# 5. 방화벽 규칙 제거 (선택사항)
+sudo ufw delete allow 80/tcp
+sudo ufw delete allow 443/tcp
+
+# 6. 시스템 패키지 제거 (다른 용도로 사용 안 하는 경우)
+sudo apt-get purge --autoremove -y nginx nodejs npm
+```
+
+#### **로컬에서 완전 제거**
+```bash
+# 프로젝트 폴더 삭제
+rm -rf /Users/당신의사용자명/Documents/readmind-main
+
+# Node.js 전역 패키지 제거 (필요한 경우)
+npm uninstall -g pm2
+
+# GitHub 저장소 삭제 (GitHub 웹에서)
+# Settings → Danger Zone → Delete this repository
+```
+
 ---
 
 ## 🛡️ **보안 고려사항**
 
-### **필수 보안 설정**
+### **⚠️ 중요: 배포 전 보안 체크리스트**
+
+#### **1. 환경 변수 보안**
+```bash
+# ✅ 안전: 환경 변수 사용
+JWT_SECRET=매우-긴-랜덤-키
+
+# ❌ 위험: 코드에 하드코딩
+const secret = "abc123"; // 절대 금지!
+```
+
+#### **2. GitHub 업로드 금지 파일들**
+- ✅ `.env` (이미 .gitignore에 포함)
+- ✅ `database.sqlite` (이미 .gitignore에 포함)
+- ✅ `*.log` 파일들 (이미 .gitignore에 포함)
+- ✅ 개인키, 인증서 파일
+- ✅ API 키가 포함된 설정 파일
+
+#### **3. 필수 보안 설정**
 1. **JWT_SECRET**: 반드시 64자 이상의 랜덤 문자열 사용
-2. **HTTPS**: SSL 인증서 적용 (Let's Encrypt 무료)
+2. **HTTPS**: Caddy 자동 또는 Let's Encrypt 수동 설정
 3. **방화벽**: 필요한 포트(80, 443, 22)만 열기
 4. **정기 업데이트**: OS 및 Node.js 보안 패치 적용
 5. **백업**: 주기적인 데이터베이스 백업

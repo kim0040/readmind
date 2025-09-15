@@ -1,6 +1,61 @@
-your_domain.com
+# Caddy Web Server Configuration
+# 자동 HTTPS 및 리버스 프록시 설정
 
-root * public
-file_server
+# 도메인을 실제 도메인으로 변경하세요
+yourdomain.com {
+    # 정적 파일 서빙 (프론트엔드)
+    root * public
+    file_server
+    
+    # API 요청을 백엔드로 프록시
+    handle /api/* {
+        reverse_proxy localhost:3000
+    }
+    
+    # SPA를 위한 폴백 (React Router 등)
+    try_files {path} /index.html
+    
+    # 보안 헤더
+    header {
+        # HSTS
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        # XSS 보호
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        # 참조자 정책
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # 권한 정책
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+    
+    # Gzip 압축
+    encode gzip
+    
+    # 정적 파일 캐싱
+    @static {
+        path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+    
+    # 로그 설정
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
 
-reverse_proxy /api/* http://localhost:3000
+# HTTP에서 HTTPS로 리디렉션 (자동)
+# Caddy가 자동으로 처리하므로 별도 설정 불필요
+
+# 개발 환경용 설정 (포트 기반)
+:8080 {
+    root * public
+    file_server
+    
+    handle /api/* {
+        reverse_proxy localhost:3000
+    }
+    
+    try_files {path} /index.html
+}
