@@ -5,8 +5,16 @@ import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates,
 import { updateTextStats } from './text_handler.js';
 import { updateProgressBar } from './reader.js';
 import { renderDocumentList, attachDocumentEventListeners, loadDocument } from './document_manager.js';
-import { scheduleSave, getCurrentSettings } from './save_manager.js';
+import { scheduleSave } from './save_manager.js';
 
+// Debounce function
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
 
 function applySettings(settings) {
     const lang = settings.language || navigator.language.split("-")[0] || "ko";
@@ -81,7 +89,6 @@ async function loadAndApplySettings() {
         try {
             const serverSettings = await auth.getSettings();
             settings = { ...settings, ...serverSettings };
-            console.log('Settings loaded from server:', serverSettings);
         } catch (error) {
             console.error('Could not load settings from the server:', error);
         }
@@ -101,25 +108,14 @@ async function initializeApp() {
                 toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
             });
             
-            // SimpleMDE 이벤트 리스너 추가
-            documentState.simplemde.codemirror.on('change', () => {
-                console.log('SimpleMDE content changed');
+            const debouncedUpdate = debounce(() => {
                 updateTextStats();
                 scheduleSave();
-            });
-            
-            // 추가 이벤트 리스너들
-            documentState.simplemde.codemirror.on('inputRead', () => {
-                console.log('SimpleMDE input read');
-                updateTextStats();
-            });
-            
-            documentState.simplemde.codemirror.on('paste', () => {
-                console.log('SimpleMDE paste detected');
-                setTimeout(() => {
-                    updateTextStats();
-                    scheduleSave();
-                }, 100);
+            }, 500); // 500ms delay
+
+            // 통합된 이벤트 리스너
+            documentState.simplemde.codemirror.on('change', () => {
+                debouncedUpdate();
             });
         }
 
@@ -133,7 +129,7 @@ async function initializeApp() {
 
         if (!localStorage.getItem(LS_KEYS.HAS_VISITED)) {
             const welcomeDialog = document.getElementById('welcome-dialog');
-            if(welcomeDialog) welcomeDialog.show();
+            if(welcomeDialog) welcomeDialog.classList.remove('hidden');
             localStorage.setItem(LS_KEYS.HAS_VISITED, 'true');
         }
 
