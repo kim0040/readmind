@@ -133,8 +133,7 @@ export function setLanguage(lang, isInitializing = false) {
     
     // 초기화가 아닐 때만 통계 업데이트 (순환 호출 방지)
     if (!isInitializing) {
-        // updateTextStats 대신 scheduleSave만 호출
-        scheduleSave();
+        // scheduleSave() 호출 제거
     }
     
     console.log('Language changed to:', lang);

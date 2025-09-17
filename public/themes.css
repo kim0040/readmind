@@ -70,12 +70,20 @@ body[data-theme="green"] {
     --md-sys-color-on-primary: #ffffff;
     --md-sys-color-primary-container: #a2f2ae;
     --md-sys-color-on-primary-container: #002108;
+    --md-sys-color-secondary: #506350;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #d3e8d1;
+    --md-sys-color-on-secondary-container: #0e1f11;
 }
 body[data-theme="green"].dark {
     --md-sys-color-primary: #87d594;
     --md-sys-color-on-primary: #003913;
     --md-sys-color-primary-container: #00521e;
     --md-sys-color-on-primary-container: #a2f2ae;
+    --md-sys-color-secondary: #b7ccb5;
+    --md-sys-color-on-secondary: #233424;
+    --md-sys-color-secondary-container: #394b39;
+    --md-sys-color-on-secondary-container: #d3e8d1;
 }
 
 /* Theme: Purple */
@@ -84,12 +92,20 @@ body[data-theme="purple"] {
     --md-sys-color-on-primary: #ffffff;
     --md-sys-color-primary-container: #f0dbff;
     --md-sys-color-on-primary-container: #280050;
+    --md-sys-color-secondary: #635b70;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #e9def8;
+    --md-sys-color-on-secondary-container: #1f182b;
 }
 body[data-theme="purple"].dark {
     --md-sys-color-primary: #debafe;
     --md-sys-color-on-primary: #4c0080;
     --md-sys-color-primary-container: #6800b0;
     --md-sys-color-on-primary-container: #f0dbff;
+    --md-sys-color-secondary: #cdc2d8;
+    --md-sys-color-on-secondary: #342d40;
+    --md-sys-color-secondary-container: #4b4357;
+    --md-sys-color-on-secondary-container: #e9def8;
 }
 
 /* Theme: Orange */
