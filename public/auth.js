@@ -12,7 +12,7 @@ const TOKEN_KEY = 'readmind_token';
  * @returns {Promise<any>} The response from the server.
  */
 export async function signup(email, password, captchaToken) {
-    const response = await fetch(`${API_URL}/signup`, {
+    const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, captchaToken }),
@@ -28,7 +28,7 @@ export async function signup(email, password, captchaToken) {
  * @returns {Promise<any>} The response from the server.
  */
 export async function login(email, password, captchaToken) {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, captchaToken }),
