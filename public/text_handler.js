@@ -99,6 +99,7 @@ export async function updateTextStats() {
         if (dom.readingTimeDisplay) dom.readingTimeDisplay.textContent = '0';
         if (dom.progressInfoDisplay) dom.progressInfoDisplay.textContent = '';
         updateProgressBar();
+        updateButtonStates('initial');
         return;
     }
 
@@ -131,6 +132,7 @@ export async function updateTextStats() {
     
     updateProgressBar();
     updateDetailedStats(cleanedText);
+    updateButtonStates(readerState.isPaused ? 'paused' : 'initial');
 }
 
 /**

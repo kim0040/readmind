@@ -54,6 +54,9 @@ export const dom = {
 
 const noop = () => {};
 
+const MESSAGE_TYPES = ['info', 'success', 'error', 'warning'];
+let messageHideTimeout = null;
+
 /**
  * 순환 참조를 피하면서 UI 이벤트를 앱 전역 동작과 연결하는 콜백 집합.
  */
@@ -192,17 +195,40 @@ export function setLanguage(lang, isInitializing = false) {
 export function showMessage(messageKey, type = "info", duration = 2000) {
     const messageBox = document.getElementById("custom-message-box");
     if (!messageBox) return;
-    messageBox.querySelector('span').textContent = getTranslation(messageKey);
-    messageBox.className = `message-box fixed top-5 left-1/2 -translate-x-1/2 p-4 rounded-md shadow-lg z-[1000] ${type}`;
-    messageBox.classList.add("show");
-    setTimeout(() => messageBox.classList.remove("show"), duration);
+
+    const messageText = messageBox.querySelector('span');
+    if (messageText) {
+        messageText.textContent = getTranslation(messageKey);
+    }
+
+    if (messageHideTimeout) {
+        clearTimeout(messageHideTimeout);
+    }
+
+    MESSAGE_TYPES.forEach((cls) => messageBox.classList.remove(cls));
+    messageBox.classList.remove('hidden');
+    messageBox.classList.add(type);
+    messageBox.classList.add('show');
+
+    messageHideTimeout = setTimeout(() => {
+        messageBox.classList.remove('show');
+        messageBox.classList.remove(type);
+        messageBox.classList.add('hidden');
+    }, duration);
 }
 
 /**
  * 읽기 제어 버튼을 지정된 상태에 맞춰 활성/비활성화한다.
  */
 export function updateButtonStates(buttonState) {
-    const hasText = dom.textInput && dom.textInput.value.trim().length > 0;
+    if (!dom.startButton || !dom.pauseButton || !dom.resetButton) {
+        return;
+    }
+
+    const editorText = documentState.simplemde ? documentState.simplemde.value() : '';
+    const fallbackText = dom.textInput?.value || '';
+    const hasText = (editorText || fallbackText).trim().length > 0;
+
     dom.startButton.disabled = true;
     dom.pauseButton.disabled = true;
     dom.resetButton.disabled = true;
@@ -305,17 +331,19 @@ function setupGeneralEventListeners() {
             }
         }, 100);
     });
-    dom.themeSelector?.addEventListener('change', (e) => {
+    const handleThemeChange = (e) => {
         const theme = e.target.value;
         applyTheme(theme, appState.isDarkMode);
         scheduleSave();
         // 강제 표시 동기화
         setTimeout(() => {
-            if (dom.themeSelector.value !== theme) {
+            if (dom.themeSelector && dom.themeSelector.value !== theme) {
                 dom.themeSelector.value = theme;
             }
         }, 100);
-    });
+    };
+    dom.themeSelector?.addEventListener('input', handleThemeChange);
+    dom.themeSelector?.addEventListener('change', handleThemeChange);
     dom.darkModeToggle?.addEventListener("click", () => {
         const isDark = !appState.isDarkMode;
         applyTheme(dom.themeSelector?.value || appState.currentTheme || 'blue', isDark);
