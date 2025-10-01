@@ -1,11 +1,8 @@
-// ui.js - UI logic, DOM manipulation, and event listeners.
+// ui.js - UI 로직과 DOM 제어, 이벤트 바인딩 담당
 
 import * as auth from './auth.js';
-import { appState, readerState, documentState } from "./state.js";
-import { handleSuccessfulLogin, handleLogout } from "./main.js";
-import { scheduleSave } from "./save_manager.js";
-import { pauseReading, startReadingFlow, updateReadingSpeed, updateProgressBar } from "./reader.js";
-import { updateTextStats, handleTextChange } from "./text_handler.js";
+import { appState, readerState, documentState } from './state.js';
+import { scheduleSave } from './save_manager.js';
 
 export const dom = {
     mainCard: document.querySelector(".main-card"),
@@ -55,6 +52,44 @@ export const dom = {
     authModalTitle: document.getElementById("auth-modal-title"),
 };
 
+const noop = () => {};
+
+/**
+ * 순환 참조를 피하면서 UI 이벤트를 앱 전역 동작과 연결하는 콜백 집합.
+ */
+let uiHandlers = {
+    onStartReading: noop,
+    onPauseReading: noop,
+    onResetReader: noop,
+    onWpmChange: noop,
+    onChunkSizeChange: noop,
+    onFixationToggle: noop,
+    onReadingModeChange: noop,
+    onAuthSuccess: noop,
+    onAuthFailure: noop,
+    onLogout: noop,
+};
+
+/**
+ * 외부에서 전달된 콜백들을 현재 핸들러 목록과 병합한다.
+ */
+export function setUiHandlers(handlers) {
+    uiHandlers = { ...uiHandlers, ...handlers };
+}
+
+/**
+ * 비동기 UI 핸들러 실행 시 오류를 포착하고 안전하게 처리한다.
+ */
+async function runAsyncHandler(name, ...args) {
+    const handler = uiHandlers[name];
+    if (typeof handler !== 'function') return;
+    try {
+        await handler(...args);
+    } catch (error) {
+        console.error(`UI 핸들러 ${name} 실행 중 오류가 발생했습니다:`, error);
+    }
+}
+
 export function showConfirmationModal(titleKey, messageKey, onConfirm) {
     const overlay = document.getElementById('confirmation-modal-overlay');
     const titleEl = document.getElementById('confirmation-modal-title');
@@ -80,6 +115,9 @@ export function showConfirmationModal(titleKey, messageKey, onConfirm) {
     overlay.classList.remove('hidden');
 }
 
+/**
+ * 읽기 영역에 선택된 폰트 스타일을 적용한다.
+ */
 export function applyReaderStyles(fontFamily, fontSize) {
     if (dom.currentWordDisplay) {
         dom.currentWordDisplay.style.fontFamily = fontFamily;
@@ -87,21 +125,31 @@ export function applyReaderStyles(fontFamily, fontSize) {
     }
 }
 
+/**
+ * 테마와 다크 모드 선택을 문서 전역에 반영한다.
+ */
 export function applyTheme(theme, isDark) {
     // 테마 설정 (전역 데이터 속성)
     if (theme) {
+        appState.currentTheme = theme;
         document.body.setAttribute('data-theme', theme);
         if (dom.themeSelector && dom.themeSelector.value !== theme) {
             dom.themeSelector.value = theme;
         }
     }
-    // 다크모드 설정 (html 클래스)
-    document.documentElement.classList.toggle('dark', !!isDark);
+    // 다크모드 설정 (html/body 클래스)
+    const shouldUseDark = typeof isDark === 'boolean' ? isDark : appState.isDarkMode;
+    appState.isDarkMode = shouldUseDark;
+    document.documentElement.classList.toggle('dark', shouldUseDark);
+    document.body.classList.toggle('dark', shouldUseDark);
     // 아이콘 업데이트
-    if (dom.themeToggleDarkIcon) dom.themeToggleDarkIcon.style.display = isDark ? 'inline-flex' : 'none';
-    if (dom.themeToggleLightIcon) dom.themeToggleLightIcon.style.display = isDark ? 'none' : 'inline-flex';
+    if (dom.themeToggleDarkIcon) dom.themeToggleDarkIcon.style.display = shouldUseDark ? 'inline-flex' : 'none';
+    if (dom.themeToggleLightIcon) dom.themeToggleLightIcon.style.display = shouldUseDark ? 'none' : 'inline-flex';
 }
 
+/**
+ * 언어와 치환 파라미터에 맞춰 번역 문자열을 반환한다.
+ */
 export function getTranslation(key, lang = appState.currentLanguage, params = null) {
     const langToUse = translations[lang] || translations["en"];
     let text = langToUse?.[key] || key;
@@ -113,9 +161,10 @@ export function getTranslation(key, lang = appState.currentLanguage, params = nu
     return text;
 }
 
+/**
+ * 현재 언어를 변경하고 번역 대상 DOM을 갱신한다.
+ */
 export function setLanguage(lang, isInitializing = false) {
-    console.log('setLanguage called with:', lang, 'initializing:', isInitializing);
-    
     appState.currentLanguage = lang;
     if (dom.languageSelector) dom.languageSelector.value = lang;
     document.documentElement.lang = lang;
@@ -135,10 +184,11 @@ export function setLanguage(lang, isInitializing = false) {
     if (!isInitializing) {
         // scheduleSave() 호출 제거
     }
-    
-    console.log('Language changed to:', lang);
 }
 
+/**
+ * 사용자 피드백 표시용 임시 토스트 메시지를 출력한다.
+ */
 export function showMessage(messageKey, type = "info", duration = 2000) {
     const messageBox = document.getElementById("custom-message-box");
     if (!messageBox) return;
@@ -148,6 +198,9 @@ export function showMessage(messageKey, type = "info", duration = 2000) {
     setTimeout(() => messageBox.classList.remove("show"), duration);
 }
 
+/**
+ * 읽기 제어 버튼을 지정된 상태에 맞춰 활성/비활성화한다.
+ */
 export function updateButtonStates(buttonState) {
     const hasText = dom.textInput && dom.textInput.value.trim().length > 0;
     dom.startButton.disabled = true;
@@ -175,35 +228,34 @@ export function updateButtonStates(buttonState) {
     dom.resetButton.textContent = getTranslation("resetButton");
 }
 
+/**
+ * 읽기 제어 버튼과 대응하는 핸들러를 바인딩한다.
+ */
 function setupReaderControls() {
     // 시작 버튼
     dom.startButton?.addEventListener("click", () => {
         const isResuming = readerState.isPaused && readerState.currentIndex > 0;
-        startReadingFlow(isResuming);
+        runAsyncHandler('onStartReading', isResuming);
     });
     
     // 일시정지 버튼
     dom.pauseButton?.addEventListener("click", () => {
-        pauseReading();
+        runAsyncHandler('onPauseReading');
     });
     
     // 리셋 버튼
     dom.resetButton?.addEventListener("click", () => {
-        if (dom.currentWordDisplay) {
-            dom.currentWordDisplay.innerHTML = '';
-        }
-        readerState.currentIndex = 0;
-        updateProgressBar();
-        updateButtonStates();
+        runAsyncHandler('onResetReader');
     });
     
     dom.wpmInput?.addEventListener("input", () => {
         const newWpm = parseInt(dom.wpmInput.value, 10);
+        if (Number.isNaN(newWpm)) {
+            return;
+        }
         readerState.currentWpm = newWpm;
-        // 통계 및 세분화 즉시 갱신
-        updateTextStats();
+        runAsyncHandler('onWpmChange', newWpm);
         scheduleSave();
-        updateReadingSpeed(newWpm);
     });
     dom.fontFamilySelector?.addEventListener('change', (e) => {
         appState.fontFamily = e.target.value;
@@ -211,7 +263,10 @@ function setupReaderControls() {
         scheduleSave();
     });
     dom.fontSizeSlider?.addEventListener('input', (e) => {
-        const newSize = e.target.value;
+        const newSize = parseInt(e.target.value, 10);
+        if (Number.isNaN(newSize)) {
+            return;
+        }
         appState.fontSize = newSize;
         if(dom.fontSizeLabel) dom.fontSizeLabel.textContent = getTranslation('fontSizeLabel', appState.currentLanguage, { size: newSize });
         applyReaderStyles(appState.fontFamily, appState.fontSize);
@@ -219,60 +274,59 @@ function setupReaderControls() {
     });
     dom.chunkSizeSelector?.addEventListener('change', async (e) => {
         readerState.chunkSize = parseInt(e.target.value, 10);
-        if (dom.textInput.value) await handleTextChange(dom.textInput.value);
+        runAsyncHandler('onChunkSizeChange', readerState.chunkSize);
         scheduleSave();
     });
     dom.fixationToggle?.addEventListener("change", (e) => {
         // Material Web Component Switch는 selected 속성 사용
         const isEnabled = e.target.selected !== undefined ? e.target.selected : e.target.checked;
         readerState.isFixationPointEnabled = isEnabled;
-        console.log('Fixation point toggled:', readerState.isFixationPointEnabled, 'Event target:', e.target);
+        runAsyncHandler('onFixationToggle', isEnabled);
         scheduleSave();
     });
     dom.readingModeSelector?.addEventListener('change', async (e) => {
         readerState.readingMode = e.target.value;
-        // 읽기 모드 변경 시 텍스트 다시 처리
-        if (dom.textInput.value) await handleTextChange(dom.textInput.value);
+        runAsyncHandler('onReadingModeChange', readerState.readingMode);
         scheduleSave();
     });
 }
 
+/**
+ * 언어/테마 등 UI 설정 요소에 이벤트를 연결한다.
+ */
 function setupGeneralEventListeners() {
     dom.languageSelector?.addEventListener("change", (event) => {
         const lang = event.target.value;
-        console.log('Language changed to:', lang);
         setLanguage(lang);
         // 강제 표시 동기화
         setTimeout(() => {
             if (dom.languageSelector.value !== lang) {
                 dom.languageSelector.value = lang;
-                console.log('Language selector value forcibly synced to:', lang);
             }
         }, 100);
     });
     dom.themeSelector?.addEventListener('change', (e) => {
         const theme = e.target.value;
-        console.log('Theme changed to:', theme);
-        applyTheme(theme, document.documentElement.classList.contains('dark'));
+        applyTheme(theme, appState.isDarkMode);
         scheduleSave();
         // 강제 표시 동기화
         setTimeout(() => {
             if (dom.themeSelector.value !== theme) {
                 dom.themeSelector.value = theme;
-                console.log('Theme selector value forcibly synced to:', theme);
             }
         }, 100);
     });
     dom.darkModeToggle?.addEventListener("click", () => {
-        const isDark = !document.documentElement.classList.contains('dark');
-        console.log('Dark mode toggle clicked, isDark:', isDark);
-        document.documentElement.classList.toggle('dark', isDark);
-        applyTheme(dom.themeSelector?.value || 'blue', isDark);
+        const isDark = !appState.isDarkMode;
+        applyTheme(dom.themeSelector?.value || appState.currentTheme || 'blue', isDark);
         dom.darkModeToggle.setAttribute('aria-pressed', isDark.toString());
         scheduleSave();
     });
 }
 
+/**
+ * 로그인 상태에 따라 인증 관련 UI를 토글한다.
+ */
 export function updateAuthUI() {
     const isLoggedIn = auth.isLoggedIn();
     if (dom.loginButton) dom.loginButton.classList.toggle('hidden', isLoggedIn);
@@ -280,6 +334,9 @@ export function updateAuthUI() {
     if (dom.newDocumentButton) dom.newDocumentButton.classList.toggle('hidden', !isLoggedIn);
 }
 
+/**
+ * 로그인/회원가입 모드를 전환하며 인증 모달을 연다.
+ */
 export function showAuthModal(isSignup = false) {
     if (dom.authModal) {
         dom.authModal.classList.remove('hidden');
@@ -295,6 +352,9 @@ export function showAuthModal(isSignup = false) {
     }
 }
 
+/**
+ * 인증 모달을 닫고 입력 값을 초기화한다.
+ */
 export function hideAuthModal() {
     if (dom.authModal) {
         dom.authModal.classList.add('hidden');
@@ -304,6 +364,9 @@ export function hideAuthModal() {
     }
 }
 
+/**
+ * 인증 모달 버튼과 API 호출/핸들러를 연결한다.
+ */
 function setupAuthEventListeners() {
     if (dom.loginButton) {
         dom.loginButton.addEventListener('click', () => showAuthModal(false));
@@ -311,7 +374,7 @@ function setupAuthEventListeners() {
     
     if (dom.logoutButton) {
         dom.logoutButton.addEventListener('click', () => {
-            handleLogout();
+            runAsyncHandler('onLogout');
         });
     }
     
@@ -332,7 +395,10 @@ function setupAuthEventListeners() {
             e.preventDefault();
             const email = dom.emailInput?.value || dom.emailInput?.input?.value;
             const password = dom.passwordInput?.value || dom.passwordInput?.input?.value;
-            const captchaToken = grecaptcha?.getResponse();
+            const captchaElement = document.querySelector('.g-recaptcha');
+            const siteKey = captchaElement?.dataset?.sitekey || '';
+            const captchaEnabled = typeof grecaptcha !== 'undefined' && !!siteKey && !siteKey.includes('YOUR_RECAPTCHA_SITE_KEY');
+            const captchaToken = captchaEnabled ? grecaptcha.getResponse() : undefined;
             
             if (!email || !password) {
                 showMessage('msgEmailPasswordRequired', 'error');
@@ -349,34 +415,42 @@ function setupAuthEventListeners() {
                 }
             }
             
-            if (!captchaToken) {
+            if (captchaEnabled && !captchaToken) {
                 showMessage('msgCaptchaRequired', 'error');
                 return;
             }
             
             try {
-                let response;
-                if (isSignup) {
-                    response = await auth.signup(email, password, captchaToken);
-                } else {
-                    response = await auth.login(email, password, captchaToken);
-                }
-                
+                const response = isSignup
+                    ? await auth.signup(email, password, captchaToken)
+                    : await auth.login(email, password, captchaToken);
+
                 if (response.token) {
+                    if (captchaEnabled) {
+                        grecaptcha.reset();
+                    }
                     hideAuthModal();
-                    await handleSuccessfulLogin();
+                    await runAsyncHandler('onAuthSuccess', { isSignup, token: response.token });
                     showMessage(isSignup ? 'msgSignupSuccess' : 'msgLoginSuccess', 'success');
                 } else {
                     showMessage(response.error_code || 'msgAuthError', 'error');
+                    runAsyncHandler('onAuthFailure', response);
                 }
             } catch (error) {
                 console.error('Auth error:', error);
+                if (captchaEnabled && typeof grecaptcha !== 'undefined') {
+                    grecaptcha.reset();
+                }
                 showMessage('msgAuthError', 'error');
+                runAsyncHandler('onAuthFailure', error);
             }
         });
     }
 }
 
+/**
+ * 사이드바 네비게이션을 열고 닫는 동작을 제어한다.
+ */
 function setupSidebarEventListeners() {
     if (dom.hamburgerMenuButton) {
         dom.hamburgerMenuButton.addEventListener('click', () => {
@@ -413,6 +487,9 @@ function setupSidebarEventListeners() {
     }
 }
 
+/**
+ * 문서 관련 버튼에 생성/초기화 동작을 연결한다.
+ */
 function setupDocumentEventListeners() {
     if (dom.newDocumentButton) {
         dom.newDocumentButton.addEventListener('click', () => {
@@ -441,6 +518,9 @@ function setupDocumentEventListeners() {
     }
 }
 
+/**
+ * 동적으로 초기화되는 주요 DOM 요소를 캐시한다.
+ */
 function initializeDOMElements() {
     // 통계 요소들을 동적으로 할당
     dom.wordCountDisplay = document.querySelector("[data-stat='word-count']");
@@ -455,16 +535,11 @@ function initializeDOMElements() {
         dom.themeSelector.value = document.body.getAttribute('data-theme');
     }
     
-    console.log('DOM elements initialized:', {
-        wordCount: !!dom.wordCountDisplay,
-        charCount: !!dom.charCountDisplay,
-        readingTime: !!dom.readingTimeDisplay,
-        darkModeToggle: !!dom.darkModeToggle,
-        themeSelector: !!dom.themeSelector,
-        languageSelector: !!dom.languageSelector
-    });
 }
 
+/**
+ * 모든 UI 이벤트 리스너를 등록한다. DOM 로드 이후 1회 호출한다.
+ */
 export function attachEventListeners() {
     initializeDOMElements();
     setupReaderControls();

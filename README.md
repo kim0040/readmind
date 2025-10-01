@@ -12,6 +12,11 @@
 
 ReadMind는 현대인의 정보 과부하 문제를 해결하기 위해 설계된 **종합적인 속독 훈련 및 지식 관리 시스템**입니다. 단순한 속독 도구를 넘어서, 개인화된 학습 경험과 안전한 데이터 관리를 제공하는 완전한 웹 애플리케이션입니다.
 
+### 🔧 **최근 개선 사항**
+- 다크/라이트 모드와 사용자 컬러 테마가 로그인 이후에도 일관되게 유지됩니다.
+- 로컬 개발 환경에서는 reCAPTCHA 없이도 회원가입과 로그인이 가능합니다.
+- Rollup 빌드 파이프라인을 정리하여 순환 의존성을 제거하고 번들 작업을 안정화했습니다.
+
 ### 🌟 **핵심 가치**
 - **🚀 읽기 속도 향상**: 과학적으로 검증된 속독 기법 적용
 - **🧠 이해도 유지**: 속도와 함께 내용 이해도도 고려한 훈련
@@ -130,17 +135,32 @@ JWT_SECRET=development-secret-key-change-in-production
 # RECAPTCHA_SECRET_KEY=your-recaptcha-secret-key
 ```
 
+> 로컬 개발 환경에서는 reCAPTCHA 설정 없이도 회원가입/로그인이 동작하도록 기본적으로 우회 처리되어 있습니다.
+
 #### **D. 애플리케이션 빌드 및 실행**
 ```bash
-# 프론트엔드 빌드
+# 프론트엔드 빌드 (개발용, 빠른 번들)
 npm run build
+
+# 프로덕션 번들 (압축 포함)
+BUILD_MINIFY=true npm run build
 
 # 백엔드 서버 시작
 cd backend
 node server.js
 ```
 
-#### **E. 브라우저에서 확인**
+> Windows PowerShell에서는 `BUILD_MINIFY=true` 대신 `set BUILD_MINIFY=true; npm run build` 형태로 실행하세요. 현 시점에서는 Rollup의 terser 플러그인 호환성 문제로 `BUILD_MINIFY=true` 옵션이 실패할 수 있으며, 배포 시 최신 버전으로 업데이트하거나 별도의 압축 스텝을 활용하는 것을 권장합니다.
+
+#### **E. 원터치 테스트 스크립트**
+```bash
+# 모든 의존성 설치 → 번들 생성 → 스모크 테스트 실행
+npm run local:test
+```
+
+> 내부적으로 `scripts/local-test.sh`가 실행되며, 성공 시 `scripts/smoke-test.js`가 백엔드 헬스 체크를 자동으로 수행합니다.
+
+#### **F. 브라우저에서 확인**
 - **주소**: http://localhost:3000
 - **API 상태**: http://localhost:3000/api/health
 
@@ -197,7 +217,42 @@ sudo systemctl start caddy
 sudo systemctl status caddy
 ```
 
-### **Option 2: Nginx 수동 배포**
+### **Option 2: 간편 실행 스크립트 (테스트 서버용)**
+```bash
+# 1) 저장소 클론
+git clone https://github.com/kim0040/readmind.git
+cd readmind
+
+# 2) 의존성 설치 + 빌드 + 서버 실행
+./scripts/server-deploy.sh
+```
+
+> `server-deploy.sh`는 개발 및 테스트 용도의 단일 명령 스크립트입니다. 운영 환경에는 Caddy/PM2 등 별도의 프로세스 관리 도구와 함께 사용하는 것을 권장합니다.
+
+#### **기존 배포 정리 절차 (안전한 교체용)**
+```bash
+# 1) 실행 중인 서비스 중지 (예: PM2 사용 시)
+pm2 stop readmind || true
+
+# 2) 데이터 및 환경 변수 백업
+cp backend/database.sqlite ~/backup/readmind-database-$(date +%Y%m%d).sqlite
+cp backend/.env ~/backup/readmind-env-$(date +%Y%m%d)
+
+# 3) 기존 코드 디렉터리 삭제 (경로는 환경에 맞게 수정)
+cd ..
+sudo rm -rf /srv/readmind
+
+# 4) 최신 버전 재설치
+git clone https://github.com/kim0040/readmind.git /srv/readmind
+cd /srv/readmind
+npm install
+cd backend && npm install --production
+```
+
+> 삭제 이전에 반드시 데이터베이스와 `.env`를 백업하세요. HTTPS 종료 지점(Caddy/NGINX)이 별도로 구성되어 있다면 해당 설정은 유지한 채 애플리케이션 코드만 교체하면 됩니다.
+
+
+### **Option 3: Nginx 수동 배포**
 
 #### **1단계: 서버 준비**
 ```bash

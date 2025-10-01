@@ -1,40 +1,46 @@
-// text_handler.js - Handles text statistics and input changes
+// text_handler.js - 텍스트 통계 계산 및 입력 변화 감지 처리
 
-import { dom, getTranslation, updateButtonStates } from "./ui.js";
-import { appState, readerState, documentState, LS_KEYS } from "./state.js";
-import { scheduleSave } from "./save_manager.js";
-import { formatWordWithFixation, updateProgressBar } from "./reader.js";
-import { cleanText, segmentKoreanMeaningful, segmentByIntl, segmentJapaneseWithKuromoji, chunkIfNeeded } from "./core/text_core.js";
+import { dom, getTranslation, updateButtonStates } from './ui.js';
+import { appState, readerState, documentState, LS_KEYS } from './state.js';
+import { scheduleSave } from './save_manager.js';
+import { formatWordWithFixation, updateProgressBar } from './reader_view.js';
+import { cleanText, segmentJapaneseWithKuromoji, chunkIfNeeded } from './core/text_core.js';
 
 let kuromojiTokenizer = null;
 
 async function getTokenizer() {
     if (kuromojiTokenizer) return kuromojiTokenizer;
-    console.log("Loading Japanese dictionary...");
+    console.log("일본어 사전을 로딩합니다...");
     return new Promise((resolve, reject) => {
         kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji/dict/" }).build((err, tokenizer) => {
             if (err) {
-                console.error("Kuromoji Build Error:", err);
+                console.error("Kuromoji 사전 생성 실패:", err);
                 reject(err);
             } else {
                 kuromojiTokenizer = tokenizer;
-                console.log("Japanese dictionary loaded.");
+                console.log("일본어 사전 로딩 완료.");
                 resolve(tokenizer);
             }
         });
     });
 }
 
+/**
+ * 브라우저 Intl Segmenter API를 활용해 텍스트를 분절한다.
+ */
 function segmentTextWithBrowserAPI(text) {
     try {
         const segmenter = new Intl.Segmenter(appState.currentLanguage, { granularity: 'word' });
         return Array.from(segmenter.segment(text)).map(s => s.segment);
     } catch (error) {
-        console.warn('Intl.Segmenter not supported, falling back to character splitting');
+        console.warn('Intl.Segmenter를 지원하지 않아 문자 단위 분할로 대체합니다');
         return text.split('');
     }
 }
 
+/**
+ * 한국어 문장을 속독에 적합한 길이로 분할한다.
+ */
 function segmentKoreanText(text) {
     // 한국어는 기본적으로 어절 단위로 처리 (자연스러운 읽기)
     const words = [];
@@ -77,6 +83,9 @@ function segmentKoreanText(text) {
     return words.filter(word => word.length > 0);
 }
 
+/**
+ * 편집기 내용을 기반으로 통계와 단어 청크를 재계산한다.
+ */
 export async function updateTextStats() {
     const currentText = documentState.simplemde ? documentState.simplemde.value() : (dom.textInput?.value || '');
     const cleanedText = cleanText(currentText);
@@ -124,6 +133,9 @@ export async function updateTextStats() {
     updateDetailedStats(cleanedText);
 }
 
+/**
+ * 외부 의존성 없이 경량 가독성 지표를 계산한다.
+ */
 function updateDetailedStats(text) {
     // 외부 라이브러리 없이 경량 통계 산출
     const stats = {
@@ -146,7 +158,7 @@ function updateDetailedStats(text) {
             stats.lexicalDiversity = wordCount > 0 ? `${((uniqueWords / wordCount) * 100).toFixed(1)}%` : "0%";
             stats.readabilityScore = (0.39 * (wordCount / sentenceCount) + 11.8 * (vowels / Math.max(wordCount,1)) - 15.59).toFixed(1);
         } catch (error) {
-            console.error("Error calculating lightweight stats:", error);
+            console.error("경량 통계 계산 중 오류가 발생했습니다:", error);
         }
     }
 
@@ -156,6 +168,9 @@ function updateDetailedStats(text) {
     if (dom.lexicalDiversity) dom.lexicalDiversity.textContent = String(stats.lexicalDiversity);
 }
 
+/**
+ * 새로운 텍스트를 적용하고 읽기 상태를 처음부터 재시작한다.
+ */
 export async function handleTextChange(newTextSourceOrEvent) {
     const newText = (typeof newTextSourceOrEvent === "string") ? newTextSourceOrEvent : (documentState.simplemde ? documentState.simplemde.value() : '');
 

@@ -1,33 +1,17 @@
-// reader.js - Core speed-reading engine logic.
+// reader.js - 속독 엔진 핵심 로직
 
-import { dom, getTranslation, showMessage, updateButtonStates } from "./ui.js";
-import { updateTextStats } from "./text_handler.js";
-import { SpeedReaderCore } from "./core/reader_core.js";
-import { readerState, appState, LS_KEYS } from "./state.js";
-import { scheduleSave } from "./save_manager.js";
+import { dom, getTranslation, showMessage, updateButtonStates } from './ui.js';
+import { updateTextStats } from './text_handler.js';
+import { SpeedReaderCore } from './core/reader_core.js';
+import { readerState, appState, LS_KEYS } from './state.js';
+import { scheduleSave } from './save_manager.js';
+import { formatWordWithFixation, updateProgressBar, resolveProgressUnitLabel } from './reader_view.js';
 
 const START_DELAY = 1000;
 
-export function updateProgressBar() {
-    if (!dom.progressBarFill) return;
-    const progress = readerState.words.length > 0 ? (readerState.currentIndex / readerState.words.length) * 100 : 0;
-    dom.progressBarFill.style.width = `${progress}%`;
-    
-    // 접근성을 위한 진행률 바 업데이트
-    const progressBar = dom.progressBarFill.parentElement;
-    if (progressBar) {
-        progressBar.setAttribute('aria-valuenow', Math.round(progress).toString());
-    }
-}
-
-export function formatWordWithFixation(word) {
-    console.log('formatWordWithFixation called:', { word, isEnabled: readerState.isFixationPointEnabled });
-    if (!readerState.isFixationPointEnabled || !word || word.length <= 1) return word;
-    const point = Math.max(0, Math.floor(word.length / 3) - (word.length > 5 ? 1 : 0));
-    if (point < 0 || point >= word.length) return word;
-    return `${word.substring(0, point)}<span class="fixation-point">${word.charAt(point)}</span>${word.substring(point + 1)}`;
-}
-
+/**
+ * 텔레프롬프터 모드에서 새로운 문장을 추가하고 최신 위치로 스크롤한다.
+ */
 function displayTeleprompterMode(newWord) {
     if (!dom.currentWordDisplay) return;
     
@@ -41,6 +25,9 @@ function displayTeleprompterMode(newWord) {
     displayArea.scrollTop = displayArea.scrollHeight;
 }
 
+/**
+ * 현재 읽기 모드에 맞춰 다음 단어/청크를 표시하고 진행률을 갱신한다.
+ */
 function displayNextWord() {
     if (readerState.currentIndex < readerState.words.length) {
         if (dom.currentWordDisplay) {
@@ -57,15 +44,12 @@ function displayNextWord() {
         }
         readerState.currentIndex++;
         if (dom.progressInfoDisplay) {
-             let unitLabel;
-            if (readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage)) {
-                unitLabel = getTranslation("charsLabel");
-            } else if (readerState.chunkSize > 1) {
-                unitLabel = getTranslation("chunksLabel");
-            } else {
-                unitLabel = getTranslation("wordsLabel");
-            }
-            dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, { unit: unitLabel, current: readerState.currentIndex, total: readerState.words.length });
+            const unitLabel = resolveProgressUnitLabel(readerState.words.length);
+            dom.progressInfoDisplay.textContent = getTranslation('progressLabelFormat', appState.currentLanguage, {
+                unit: unitLabel,
+                current: readerState.currentIndex,
+                total: readerState.words.length,
+            });
         }
         updateProgressBar();
     } else {
@@ -73,6 +57,11 @@ function displayNextWord() {
     }
 }
 
+/**
+ * 속독 엔진을 초기화하고 실행한다.
+ *
+ * @param {boolean} isResuming 일시정지 상태에서 재개하는지 여부
+ */
 export async function startReadingFlow(isResuming = false) {
     // 항상 최신 텍스트 세분화가 반영되도록 보장
     await updateTextStats();
@@ -153,11 +142,12 @@ export async function startReadingFlow(isResuming = false) {
             onProgress: (idx, total) => {
                 readerState.currentIndex = idx;
                 if (dom.progressInfoDisplay) {
-                    let unitLabel;
-                    if (readerState.NO_SPACE_LANGUAGES.includes(appState.currentLanguage)) unitLabel = getTranslation("charsLabel");
-                    else if (readerState.chunkSize > 1) unitLabel = getTranslation("chunksLabel");
-                    else unitLabel = getTranslation("wordsLabel");
-                    dom.progressInfoDisplay.textContent = getTranslation("progressLabelFormat", appState.currentLanguage, { unit: unitLabel, current: idx, total });
+                    const unitLabel = resolveProgressUnitLabel(total);
+                    dom.progressInfoDisplay.textContent = getTranslation('progressLabelFormat', appState.currentLanguage, {
+                        unit: unitLabel,
+                        current: idx,
+                        total,
+                    });
                 }
                 updateProgressBar();
             },
@@ -178,6 +168,9 @@ export async function startReadingFlow(isResuming = false) {
     readerState.engine.start(isResuming, START_DELAY);
 }
 
+/**
+ * 읽기가 완료되었을 때 타이머를 정리하고 UI/상태를 저장한다.
+ */
 function completeReadingSession() {
     clearInterval(readerState.intervalId);
     readerState.intervalId = null;
@@ -192,6 +185,9 @@ function completeReadingSession() {
     localStorage.setItem(LS_KEYS.INDEX, "0");
 }
 
+/**
+ * 엔진을 일시정지하고 현재 위치를 저장한다.
+ */
 export function pauseReading() {
     if (readerState.engine) readerState.engine.pause();
     readerState.isPaused = true;
@@ -200,6 +196,11 @@ export function pauseReading() {
     localStorage.setItem(LS_KEYS.INDEX, readerState.currentIndex.toString());
 }
 
+/**
+ * 엔진이 실행 중일 때 읽기 속도를 실시간으로 갱신한다.
+ *
+ * @param {number} newWpm 새로 선택된 분당 단어 수
+ */
 export function updateReadingSpeed(newWpm) {
     readerState.currentWpm = newWpm;
     if (readerState.engine) {

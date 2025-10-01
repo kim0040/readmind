@@ -10,7 +10,9 @@
     "build": "rollup -c",
     "build:watch": "rollup -c -w",
     "deploy": "npm run build && cd backend && npm install --production",
-    "deploy:full": "npm install && npm run build && cd backend && npm install --production"
+    "deploy:full": "npm install && npm run build && cd backend && npm install --production",
+    "smoke": "node scripts/smoke-test.js",
+    "local:test": "bash scripts/local-test.sh"
   },
   "keywords": ["speed-reading", "text-analysis", "markdown", "productivity"],
   "author": "ReadMind Team",

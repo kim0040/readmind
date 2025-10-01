@@ -5,14 +5,18 @@ const { getDb } = require('../database');
 const captchaVerification = require('../middleware/captcha_verification');
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-key';
 
+/**
+ * README에 명시된 강력한 비밀번호 정책을 검증한다.
+ */
 const validatePassword = (password) => {
-    // Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    // 최소 8자, 대문자/소문자/숫자/특수문자 각 1자 이상 포함
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
     return passwordRegex.test(password);
 };
 
-// Signup endpoint
+// 회원가입 엔드포인트
 router.post('/signup', captchaVerification, async (req, res) => {
     const { email, password } = req.body;
 
@@ -39,24 +43,24 @@ router.post('/signup', captchaVerification, async (req, res) => {
         );
         const newUserId = result.lastID;
 
-        // Also log the user in by returning a JWT
+        // 회원가입 완료와 동시에 JWT를 발급하여 로그인 처리
         const payload = {
             user: { id: newUserId, email: email },
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 
         res.status(201).json({
-            message: 'User created successfully.',
+            message: '회원가입이 완료되었습니다.',
             token,
         });
     } catch (err) {
-        console.error('Signup error:', err.message);
+        console.error('회원가입 처리 중 오류:', err.message);
         res.status(500).json({ error_code: 'SERVER_ERROR_SIGNUP' });
     }
 });
 
-// Login endpoint
+// 로그인 엔드포인트
 router.post('/login', captchaVerification, async (req, res) => {
     const { email, password } = req.body;
 
@@ -83,19 +87,19 @@ router.post('/login', captchaVerification, async (req, res) => {
             user: { id: user.id, email: user.email },
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 
         res.status(200).json({
-            message: 'Login successful.',
+            message: '로그인에 성공했습니다.',
             token,
         });
     } catch (err) {
-        console.error('Login error:', err.message);
+        console.error('로그인 처리 중 오류:', err.message);
         res.status(500).json({ error_code: 'SERVER_ERROR_LOGIN' });
     }
 });
 
-// Refresh token endpoint
+// 토큰 갱신 엔드포인트
 router.post('/refresh', async (req, res) => {
     const { token } = req.body;
     
@@ -104,7 +108,7 @@ router.post('/refresh', async (req, res) => {
     }
     
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
         const db = getDb();
         const user = await db.get('SELECT id, email FROM users WHERE id = ?', decoded.user.id);
         
@@ -117,7 +121,7 @@ router.post('/refresh', async (req, res) => {
             user: { id: user.id, email: user.email },
         };
         
-        const newToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+        const newToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
         
         res.status(200).json({
             message: 'Token refreshed successfully.',
@@ -129,7 +133,7 @@ router.post('/refresh', async (req, res) => {
         } else if (err.name === 'JsonWebTokenError') {
             return res.status(401).json({ error_code: 'INVALID_TOKEN' });
         } else {
-            console.error('Token refresh error:', err.message);
+            console.error('토큰 갱신 중 오류:', err.message);
             return res.status(500).json({ error_code: 'SERVER_ERROR_REFRESH' });
         }
     }

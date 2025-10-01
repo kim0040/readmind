@@ -4,6 +4,9 @@ const { open } = require('sqlite');
 
 let db;
 
+/**
+ * SQLite 데이터베이스를 열고 필요한 테이블/인덱스를 준비한다.
+ */
 async function setupDatabase() {
     if (db) {
         return db;
@@ -15,7 +18,7 @@ async function setupDatabase() {
             driver: sqlite3.Database
         });
 
-        console.log('Connected to the SQLite database.');
+        console.log('SQLite 데이터베이스 연결 완료');
 
         // Create the users table if it doesn't exist
         await db.exec(`
@@ -52,17 +55,20 @@ async function setupDatabase() {
             CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
         `);
 
-        console.log('Users and Documents tables are ready.');
+console.log('사용자/문서 테이블 준비 완료');
         return db;
     } catch (err) {
-        console.error('Error setting up database:', err.message);
+        console.error('데이터베이스 초기화 중 오류:', err.message);
         throw err;
     }
 }
 
+/**
+ * setupDatabase() 호출 이후 초기화된 SQLite 커넥션을 반환한다.
+ */
 function getDb() {
     if (!db) {
-        throw new Error('Database not initialized. Call setupDatabase() first.');
+        throw new Error('데이터베이스가 초기화되지 않았습니다. setupDatabase()를 먼저 호출하세요.');
     }
     return db;
 }

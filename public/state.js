@@ -1,4 +1,4 @@
-// state.js - Shared application state, modularized by feature.
+// state.js - 기능별로 분리된 공용 애플리케이션 상태 정의
 
 // --- Constants ---
 export const LS_KEYS = {
@@ -16,6 +16,7 @@ export const APP_VERSION = "2.0.0";
 export const appState = {
     currentLanguage: "ko",
     currentTheme: "blue",
+    isDarkMode: false,
     userHasManuallySetTheme: false,
     originalPlaceholderText: "",
     encoder: new TextEncoder(),

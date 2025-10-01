@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
+const path = require('path');
 const { setupDatabase } = require('./database');
 
 // --- Route Imports ---
@@ -19,10 +20,10 @@ const PORT = process.env.PORT || 3000;
 
 // --- Core Middleware ---
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || '*', // Default to all for development if not set
+    origin: process.env.CORS_ORIGIN || '*', // 설정이 없으면 개발 편의를 위해 전체 허용
 };
 app.use(cors(corsOptions));
-app.use(express.json()); // Middleware to parse JSON bodies
+app.use(express.json()); // JSON 본문 파싱용 미들웨어
 
 // --- Security Headers ---
 app.use((req, res, next) => {
@@ -57,30 +58,32 @@ app.use((req, res, next) => {
 
 // --- Security Middleware ---
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000, // 15분
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes',
+    message: '요청이 너무 많습니다. 15분 후 다시 시도해주세요.',
 });
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Increased slightly to accommodate captcha retries etc.
+    windowMs: 15 * 60 * 1000, // 15분
+    max: 20, // CAPTCHA 재시도 등을 고려해 약간 여유를 둠
     standardHeaders: true,
     legacyHeaders: false,
-    message: 'Too many authentication attempts from this IP, please try again after 15 minutes',
+    message: '인증 시도가 너무 많습니다. 15분 후 다시 시도해주세요.',
 });
 
 
 // --- Static File Serving ---
-app.use(express.static('../public'));
+const publicDir = path.join(__dirname, '..', 'public');
+// 작업 디렉터리에 관계없이 번들된 SPA 정적 파일을 제공
+app.use(express.static(publicDir));
 
-// --- API Route Setup ---
-app.use('/api', apiLimiter); // Apply general rate limiting to all API routes
+// --- API 라우트 설정 ---
+app.use('/api', apiLimiter); // 모든 API 요청에 대한 기본 Rate Limit 적용
 
 app.use('/api/health', healthRoutes);
-app.use('/api/auth', authLimiter, authRoutes); // Apply stricter limiting to auth routes
+app.use('/api/auth', authLimiter, authRoutes); // 인증 라우트에는 더 강한 제한 적용
 app.use('/api/documents', documentRoutes);
 app.use('/api/settings', settingsRoutes);
 
@@ -90,10 +93,10 @@ async function startServer() {
     try {
         await setupDatabase();
         app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
+            console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
         });
     } catch (err) {
-        console.error('Failed to start server:', err);
+        console.error('서버 시작 중 오류가 발생했습니다:', err);
         process.exit(1);
     }
 }
