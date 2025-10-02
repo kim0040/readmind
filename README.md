@@ -188,190 +188,233 @@ npm run local:test
 
 ---
 
-## 🌐 **서버 배포 가이드**
+## 🌐 **서버 배포 가이드 (Production)**
 
-### **Option 1: Caddy 웹서버 배포 (HTTPS 자동, 권장)**
+이 가이드는 Ubuntu 22.04 LTS 환경을 기준으로 ReadMind 애플리케이션을 실제 운영 서버에 배포하는 과정을 상세히 설명합니다. Caddy 웹서버를 사용하여 HTTPS를 자동으로 설정하고, PM2를 이용해 Node.js 애플리케이션을 안정적으로 관리합니다.
 
-#### **Caddy 장점**
-- 🔒 **자동 HTTPS**: Let's Encrypt 인증서 자동 발급 및 갱신
-- ⚡ **간단한 설정**: Caddyfile 하나로 모든 설정 완료
-- 🛡️ **보안**: 기본적으로 안전한 설정 적용
+### **사전 요구사항**
 
-#### **Caddy 설치 및 설정**
+- **서버**: Ubuntu 22.04 LTS가 설치된 서버 (가상 머신 또는 물리 서버)
+- **도메인**: 서버의 공인 IP 주소를 가리키는 도메인 이름 (예: `yourdomain.com`)
+- **기본 패키지**: `git`, `curl`, `nano` 등 기본 명령줄 도구
+- **Node.js**: `v18.0.0` 이상
+- **npm**: `v8.0.0` 이상
+
+---
+
+### **1단계: Node.js 설치**
+
+서버에 Node.js와 npm이 설치되어 있지 않다면 다음 명령어로 최신 LTS 버전을 설치합니다.
+
+```bash
+# Node.js 18.x 버전 저장소 추가
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+
+# Node.js 설치 (npm 포함)
+sudo apt-get install -y nodejs
+```
+
+설치 후 버전을 확인하여 정상적으로 설치되었는지 검증합니다.
+
+```bash
+node -v  # v18.x.x
+npm -v   # 8.x.x 또는 그 이상
+```
+
+---
+
+### **2단계: 소스 코드 다운로드 및 설치 경로 설정**
+
+사용자 요청에 따라, `/home/web` 디렉터리 아래에 프로젝트를 설치하는 예시입니다.
+
+```bash
+# 설치 디렉터리 생성
+sudo mkdir -p /home/web
+sudo chown $USER:$USER /home/web
+
+# GitHub에서 소스 코드 클론
+git clone https://github.com/kim0040/readmind.git /home/web/readmind
+
+# 프로젝트 디렉터리로 이동
+cd /home/web/readmind
+```
+
+> **참고**: `sudo chown $USER:$USER /home/web` 명령은 현재 로그인된 사용자에게 `/home/web` 디렉터리의 소유권을 부여하여 `sudo` 없이 파일을 관리할 수 있게 합니다.
+
+---
+
+### **3단계: 의존성 설치 및 프론트엔드 빌드**
+
+프로젝트 실행에 필요한 모든 패키지를 설치하고, 웹 브라우저에 표시될 프론트엔드 파일을 빌드합니다.
+
+```bash
+# 루트 디렉터리에서 프론트엔드 관련 개발 의존성 설치
+npm install
+
+# 백엔드 디렉터리로 이동하여 운영용 의존성만 설치
+cd backend
+npm install --production
+cd ..
+
+# 프론트엔드 소스 코드 빌드 (최적화 및 압축)
+# public/dist 폴더에 결과물이 생성됩니다.
+BUILD_MINIFY=true npm run build
+```
+
+---
+
+### **4단계: 백엔드 환경 설정**
+
+백엔드 서버에 필요한 환경 변수를 설정합니다. 특히, 보안을 위한 `JWT_SECRET`은 반드시 강력한 무작위 문자열로 생성해야 합니다.
+
+```bash
+# 백엔드 디렉터리로 이동
+cd backend
+
+# .env 파일 생성
+nano .env
+```
+
+아래 내용을 `.env` 파일에 붙여넣고, **`yourdomain.com`**과 **`JWT_SECRET`** 값을 반드시 수정하세요.
+
+```env
+# 운영 환경 설정
+NODE_ENV=production
+PORT=3000
+
+# Caddy를 통해 접속할 실제 도메인 주소
+CORS_ORIGIN=https://yourdomain.com
+
+# ⚠️ 보안 경고: 아래 명령어로 생성된 강력한 비밀 키로 교체하세요!
+JWT_SECRET=매우-긴-랜덤-문자열-최소-64자-이상
+
+# (선택사항) Google reCAPTCHA 사용 시
+# RECAPTCHA_SECRET_KEY=your-production-recaptcha-key
+```
+
+**새로운 `JWT_SECRET` 생성 방법 (터미널에서 실행):**
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+위 명령어를 실행하면 나오는 긴 문자열을 복사하여 `.env` 파일의 `JWT_SECRET` 값으로 사용하세요.
+
+설정이 끝났으면 프로젝트 루트 디렉터리로 다시 이동합니다.
+```bash
+cd ..
+```
+
+---
+
+### **5단계: PM2로 백엔드 서버 실행**
+
+PM2는 Node.js 애플리케이션을 위한 프로세스 관리자로, 서버가 예기치 않게 종료되면 자동으로 재시작하고, 시스템 부팅 시 앱을 실행하는 등 안정적인 운영을 돕습니다.
+
+```bash
+# PM2 전역 설치
+sudo npm install -g pm2
+
+# ecosystem.config.js 파일을 사용하여 백엔드 서버 시작
+pm2 start ecosystem.config.js
+
+# 현재 실행 중인 프로세스 목록 확인
+pm2 list
+
+# 시스템 재부팅 시 PM2가 자동으로 서비스를 시작하도록 설정
+pm2 save
+pm2 startup
+```
+
+`pm2 startup` 명령 실행 시 화면에 나타나는 `sudo env ...` 로 시작하는 명령어를 복사하여 그대로 한 번 더 실행해 주세요.
+
+---
+
+### **6단계: Caddy 웹서버 설치 및 설정**
+
+Caddy는 간편한 설정과 자동 HTTPS 기능이 강력한 최신 웹서버입니다.
+
+#### **A. Caddy 설치**
+
 ```bash
 # Caddy 설치 (Ubuntu/Debian)
 sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
 sudo apt update && sudo apt install caddy
+```
 
-# Caddyfile 설정 (프로젝트에 포함된 파일 사용)
-sudo cp Caddyfile /etc/caddy/Caddyfile
+#### **B. Caddyfile 설정**
 
-# 도메인 수정 (yourdomain.com을 실제 도메인으로 변경)
+프로젝트에 포함된 `Caddyfile`을 시스템 설정 위치로 복사한 후, 경로와 도메인에 맞게 수정합니다.
+
+```bash
+# 기존 Caddyfile 백업
+sudo mv /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak
+
+# 프로젝트의 Caddyfile을 복사
+sudo cp /home/web/readmind/Caddyfile /etc/caddy/Caddyfile
+
+# 복사된 Caddyfile 수정
 sudo nano /etc/caddy/Caddyfile
-
-# Caddy 시작
-sudo systemctl enable caddy
-sudo systemctl start caddy
-sudo systemctl status caddy
 ```
 
-### **Option 2: 간편 실행 스크립트 (테스트 서버용)**
-```bash
-# 1) 저장소 클론
-git clone https://github.com/kim0040/readmind.git
-cd readmind
+`nano` 편집기에서 `Caddyfile`의 내용을 아래와 같이 수정합니다. **`yourdomain.com`**을 실제 도메인으로, `root` 경로를 프로젝트 설치 경로에 맞게 변경하는 것이 핵심입니다.
 
-# 2) 의존성 설치 + 빌드 + 서버 실행
-./scripts/server-deploy.sh
-```
+```caddy
+# yourdomain.com을 실제 도메인으로 변경하세요.
+yourdomain.com {
+    # 프론트엔드 파일이 위치한 경로를 정확히 지정합니다.
+    # 예시: /home/web/readmind/public
+    root * /home/web/readmind/public
+    file_server
 
-> `server-deploy.sh`는 개발 및 테스트 용도의 단일 명령 스크립트입니다. 운영 환경에는 Caddy/PM2 등 별도의 프로세스 관리 도구와 함께 사용하는 것을 권장합니다.
-
-#### **기존 배포 정리 절차 (안전한 교체용)**
-```bash
-# 1) 실행 중인 서비스 중지 (예: PM2 사용 시)
-pm2 stop readmind || true
-
-# 2) 데이터 및 환경 변수 백업
-cp backend/database.sqlite ~/backup/readmind-database-$(date +%Y%m%d).sqlite
-cp backend/.env ~/backup/readmind-env-$(date +%Y%m%d)
-
-# 3) 기존 코드 디렉터리 삭제 (경로는 환경에 맞게 수정)
-cd ..
-sudo rm -rf /srv/readmind
-
-# 4) 최신 버전 재설치
-git clone https://github.com/kim0040/readmind.git /srv/readmind
-cd /srv/readmind
-npm install
-cd backend && npm install --production
-```
-
-> 삭제 이전에 반드시 데이터베이스와 `.env`를 백업하세요. HTTPS 종료 지점(Caddy/NGINX)이 별도로 구성되어 있다면 해당 설정은 유지한 채 애플리케이션 코드만 교체하면 됩니다.
-
-
-### **Option 3: Nginx 수동 배포**
-
-#### **1단계: 서버 준비**
-```bash
-# Ubuntu/Debian 서버에서
-sudo apt update && sudo apt upgrade -y
-sudo apt install nodejs npm git -y
-
-# Node.js 최신 LTS 설치
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt-get install -y nodejs
-```
-
-#### **2단계: 프로젝트 배포**
-```bash
-# 프로젝트 클론
-git clone https://github.com/kim0040/readmind.git
-cd readmind
-
-# 프로덕션 의존성 설치 및 빌드
-npm run deploy:full
-
-# 프로덕션 환경변수 설정
-cd backend
-sudo nano .env
-```
-
-**프로덕션 .env 설정**:
-```env
-NODE_ENV=production
-PORT=3000
-CORS_ORIGIN=https://yourdomain.com
-
-# 보안: 강력한 JWT 키 생성 필수!
-JWT_SECRET=매우-긴-랜덤-문자열-최소-64자-이상
-
-# 선택: reCAPTCHA
-RECAPTCHA_SECRET_KEY=your-production-recaptcha-key
-```
-
-**안전한 JWT 키 생성**:
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-#### **3단계: PM2로 프로세스 관리**
-```bash
-# PM2 전역 설치
-sudo npm install -g pm2
-
-# PM2로 서버 시작
-pm2 start ecosystem.config.js
-
-# 시스템 부팅 시 자동 시작
-pm2 save
-pm2 startup
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USER --hp $HOME
-```
-
-#### **4단계: Nginx 리버스 프록시 설정**
-```bash
-# Nginx 설치
-sudo apt install nginx -y
-
-# 설정 파일 생성
-sudo nano /etc/nginx/sites-available/readmind
-```
-
-**Nginx 설정**:
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com www.yourdomain.com;
-
-    # 정적 파일 직접 서빙
-    location / {
-        root /home/ubuntu/readmind/public;
-        try_files $uri $uri/ /index.html;
-        
-        # 브라우저 캐싱
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
+    # /api/ 로 시작하는 모든 요청을 3000번 포트에서 실행 중인 백엔드 서버로 전달합니다.
+    handle /api/* {
+        reverse_proxy localhost:3000
     }
 
-    # API 요청 프록시
-    location /api/ {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+    # React, Vue 등 SPA 라우팅을 위한 설정입니다.
+    # 모든 요청을 일단 파일 시스템에서 찾고, 없으면 /index.html로 보냅니다.
+    try_files {path} /index.html
+
+    # 보안 헤더 (기존 설정 유지)
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
+    # Gzip 압축 활성화
+    encode gzip
+
+    # 로그 설정
+    log {
+        output file /var/log/caddy/access.log
+        format json
     }
 }
 ```
 
+#### **C. Caddy 서비스 재시작**
+
+수정한 설정을 적용하기 위해 Caddy 서비스를 재시작합니다.
+
 ```bash
-# 설정 활성화
-sudo ln -s /etc/nginx/sites-available/readmind /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+# Caddy 설정 파일에 문법 오류가 없는지 확인
+sudo caddy fmt --overwrite /etc/caddy/Caddyfile
+
+# Caddy 서비스 재시작하여 설정 적용
+sudo systemctl reload caddy
+
+# Caddy 서비스 상태 확인 (오류가 없는지 확인)
+sudo systemctl status caddy
 ```
 
-#### **5단계: SSL 인증서 설정 (Let's Encrypt)**
-```bash
-# Certbot 설치
-sudo apt install certbot python3-certbot-nginx -y
-
-# SSL 인증서 발급
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-
-# 자동 갱신 설정
-sudo crontab -e
-# 추가: 0 12 * * * /usr/bin/certbot renew --quiet
-```
+`status` 확인 시 `active (running)` 메시지가 보이면 정상입니다. 이제 `https://yourdomain.com`으로 접속하여 배포된 ReadMind 애플리케이션을 확인할 수 있습니다. Caddy가 자동으로 Let's Encrypt SSL 인증서를 발급하여 HTTPS 접속이 가능합니다.
 
 ### **Option 2: Docker 배포**
 
