@@ -316,7 +316,7 @@ PM2는 Node.js 애플리케이션을 위한 프로세스 관리자로, 서버가
 sudo npm install -g pm2
 
 # ecosystem.config.js 파일을 사용하여 백엔드 서버 시작
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # 현재 실행 중인 프로세스 목록 확인
 pm2 list
