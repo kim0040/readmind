@@ -1,5 +1,5 @@
 import * as auth from './auth.js';
-import { dom, showMessage, getTranslation, showConfirmationModal } from './ui.js';
+import { dom, showMessage, getTranslation, showConfirmationModal, showAuthModal } from './ui.js';
 import { documentState, LS_KEYS } from './state.js';
 import { handleTextChange } from './text_handler.js';
 import { debounce } from './utils.js';
@@ -144,7 +144,15 @@ export function attachDocumentEventListeners() {
     });
 
     dom.newDocumentButton.addEventListener('click', async () => {
-        const title = prompt("Enter a title for your new document:", "New Document");
+        if (!auth.isLoggedIn()) {
+            showMessage('loginToSeeDocs', 'info');
+            showAuthModal(false);
+            return;
+        }
+
+        const promptMessage = getTranslation('newDocumentPrompt');
+        const defaultTitle = getTranslation('newDocumentDefaultTitle');
+        const title = prompt(promptMessage || 'Enter a title for your new document:', defaultTitle || 'New Document');
         if (title) {
             try {
                 const newDoc = await auth.createDocument(title, `# ${title}\n\n`);
@@ -152,7 +160,8 @@ export function attachDocumentEventListeners() {
                 await renderDocumentList();
                 loadDocument(newDoc);
             } catch (error) {
-                showMessage(error.message, 'error');
+                const errorMessage = typeof error === 'string' ? error : error?.message;
+                showMessage(errorMessage || 'error_UNKNOWN', 'error');
             }
         }
     });

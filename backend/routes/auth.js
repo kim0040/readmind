@@ -11,8 +11,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-key';
  * README에 명시된 강력한 비밀번호 정책을 검증한다.
  */
 const validatePassword = (password) => {
-    // 최소 8자, 대문자/소문자/숫자/특수문자 각 1자 이상 포함
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+    // 최소 8자, 대문자/소문자/숫자/특수문자(공백 제외) 각 1자 이상 포함
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{8,}$/;
     return passwordRegex.test(password);
 };
 

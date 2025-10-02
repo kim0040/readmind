@@ -1,7 +1,7 @@
 // main.js - 애플리케이션 초기 구동 스크립트
 import * as auth from './auth.js';
 import { appState, readerState, documentState, LS_KEYS } from './state.js';
-import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, applyReaderStyles, updateAuthUI, setUiHandlers } from './ui.js';
+import { dom, applyTheme, setLanguage, attachEventListeners, updateButtonStates, applyReaderStyles, updateAuthUI, setUiHandlers, refreshDomReferences } from './ui.js';
 import { updateTextStats, handleTextChange } from './text_handler.js';
 import { startReadingFlow, pauseReading, updateReadingSpeed } from './reader.js';
 import { updateProgressBar } from './reader_view.js';
@@ -192,6 +192,7 @@ async function loadAndApplySettings() {
  */
 async function initializeApp() {
     try {
+        refreshDomReferences();
         const textInputEl = document.getElementById("text-input");
         if (textInputEl && typeof SimpleMDE === 'function') {
             documentState.simplemde = new SimpleMDE({

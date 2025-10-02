@@ -345,52 +345,100 @@ var ReadMind = (function (exports) {
 
 
     const dom = {
-        mainCard: document.querySelector(".main-card"),
-        documentSidebar: document.getElementById("document-sidebar"),
-        sidebarOverlay: document.getElementById("sidebar-overlay"),
-        textInput: document.getElementById("text-input"),
-        currentWordDisplay: document.getElementById("current-word"),
-        progressInfoDisplay: document.getElementById("progress-info"),
-        progressBarFill: document.getElementById("progress-bar-fill"),
-        startButton: document.getElementById("start-button"),
-        pauseButton: document.getElementById("pause-button"),
-        resetButton: document.getElementById("reset-button"),
-        fullscreenButton: document.getElementById("fullscreen-button"),
-        newDocumentButton: document.getElementById("new-document-button"),
-        clearTextButton: document.getElementById("clear-text-button"),
-        loginButton: document.getElementById("login-button"),
-        logoutButton: document.getElementById("logout-button"),
-        hamburgerMenuButton: document.getElementById("hamburger-menu-button"),
-        closeSidebarButton: document.getElementById("close-sidebar-button"),
-        wpmInput: document.getElementById("wpm-input"),
-        darkModeToggle: document.getElementById("dark-mode-toggle"),
-        themeToggleDarkIcon: document.getElementById("theme-toggle-dark-icon"),
-        themeToggleLightIcon: document.getElementById("theme-toggle-light-icon"),
-        themeSelector: document.getElementById("theme-selector"),
-        fixationToggle: document.getElementById("fixation-toggle"),
-        languageSelector: document.getElementById("language-selector"),
-        chunkSizeSelector: document.getElementById("chunk-size-selector"),
-        readingModeSelector: document.getElementById("reading-mode-selector"),
-        fontFamilySelector: document.getElementById("font-family-selector"),
-        fontSizeSlider: document.getElementById("font-size-slider"),
-        fontSizeLabel: document.getElementById("font-size-label"),
+        mainCard: null,
+        documentSidebar: null,
+        sidebarOverlay: null,
+        textInput: null,
+        currentWordDisplay: null,
+        progressInfoDisplay: null,
+        progressBarFill: null,
+        startButton: null,
+        pauseButton: null,
+        resetButton: null,
+        fullscreenButton: null,
+        newDocumentButton: null,
+        clearTextButton: null,
+        loginButton: null,
+        logoutButton: null,
+        hamburgerMenuButton: null,
+        closeSidebarButton: null,
+        wpmInput: null,
+        darkModeToggle: null,
+        themeToggleDarkIcon: null,
+        themeToggleLightIcon: null,
+        themeSelector: null,
+        fixationToggle: null,
+        languageSelector: null,
+        chunkSizeSelector: null,
+        readingModeSelector: null,
+        fontFamilySelector: null,
+        fontSizeSlider: null,
+        fontSizeLabel: null,
         wordCountDisplay: null,
         charCountDisplay: null,
         readingTimeDisplay: null,
-        readabilityScore: document.getElementById("readability-score"),
-        avgSentenceLength: document.getElementById("avg-sentence-length"),
-        syllableCount: document.getElementById("syllable-count"),
-        lexicalDiversity: document.getElementById("lexical-diversity"),
-        documentList: document.getElementById("document-list"),
-        authModal: document.getElementById("auth-modal"),
-        authForm: document.getElementById("auth-form"),
-        emailInput: document.getElementById("email-input"),
-        passwordInput: document.getElementById("password-input"),
-        authSubmitButton: document.getElementById("auth-submit-button"),
-        authCancelButton: document.getElementById("auth-cancel-button"),
-        authSwitchButton: document.getElementById("auth-switch-button"),
-        authModalTitle: document.getElementById("auth-modal-title"),
+        readabilityScore: null,
+        avgSentenceLength: null,
+        syllableCount: null,
+        lexicalDiversity: null,
+        documentList: null,
+        authModal: null,
+        authForm: null,
+        emailInput: null,
+        passwordInput: null,
+        authSubmitButton: null,
+        authCancelButton: null,
+        authSwitchButton: null,
+        authModalTitle: null,
     };
+
+    /**
+     * DOM 요소 참조를 최신 상태로 갱신한다.
+     */
+    function refreshDomReferences() {
+        dom.mainCard = document.querySelector('.main-card');
+        dom.documentSidebar = document.getElementById('document-sidebar');
+        dom.sidebarOverlay = document.getElementById('sidebar-overlay');
+        dom.textInput = document.getElementById('text-input');
+        dom.currentWordDisplay = document.getElementById('current-word');
+        dom.progressInfoDisplay = document.getElementById('progress-info');
+        dom.progressBarFill = document.getElementById('progress-bar-fill');
+        dom.startButton = document.getElementById('start-button');
+        dom.pauseButton = document.getElementById('pause-button');
+        dom.resetButton = document.getElementById('reset-button');
+        dom.fullscreenButton = document.getElementById('fullscreen-button');
+        dom.newDocumentButton = document.getElementById('new-document-button');
+        dom.clearTextButton = document.getElementById('clear-text-button');
+        dom.loginButton = document.getElementById('login-button');
+        dom.logoutButton = document.getElementById('logout-button');
+        dom.hamburgerMenuButton = document.getElementById('hamburger-menu-button');
+        dom.closeSidebarButton = document.getElementById('close-sidebar-button');
+        dom.wpmInput = document.getElementById('wpm-input');
+        dom.darkModeToggle = document.getElementById('dark-mode-toggle');
+        dom.themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        dom.themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        dom.themeSelector = document.getElementById('theme-selector');
+        dom.fixationToggle = document.getElementById('fixation-toggle');
+        dom.languageSelector = document.getElementById('language-selector');
+        dom.chunkSizeSelector = document.getElementById('chunk-size-selector');
+        dom.readingModeSelector = document.getElementById('reading-mode-selector');
+        dom.fontFamilySelector = document.getElementById('font-family-selector');
+        dom.fontSizeSlider = document.getElementById('font-size-slider');
+        dom.fontSizeLabel = document.getElementById('font-size-label');
+        dom.readabilityScore = document.getElementById('readability-score');
+        dom.avgSentenceLength = document.getElementById('avg-sentence-length');
+        dom.syllableCount = document.getElementById('syllable-count');
+        dom.lexicalDiversity = document.getElementById('lexical-diversity');
+        dom.documentList = document.getElementById('document-list');
+        dom.authModal = document.getElementById('auth-modal');
+        dom.authForm = document.getElementById('auth-form');
+        dom.emailInput = document.getElementById('email-input');
+        dom.passwordInput = document.getElementById('password-input');
+        dom.authSubmitButton = document.getElementById('auth-submit-button');
+        dom.authCancelButton = document.getElementById('auth-cancel-button');
+        dom.authSwitchButton = document.getElementById('auth-switch-button');
+        dom.authModalTitle = document.getElementById('auth-modal-title');
+    }
 
     const noop = () => {};
 
@@ -494,8 +542,12 @@ var ReadMind = (function (exports) {
      * 언어와 치환 파라미터에 맞춰 번역 문자열을 반환한다.
      */
     function getTranslation$1(key, lang = appState.currentLanguage, params = null) {
-        const langToUse = translations[lang] || translations["en"];
-        let text = langToUse?.[key] || key;
+        const langToUse = translations[lang] || translations['en'];
+        const englishPack = translations['en'] || {};
+        let text = langToUse?.[key];
+        if (text === undefined) {
+            text = englishPack[key] ?? key;
+        }
         if (params && typeof text === 'string') {
             for (const pKey in params) {
                 text = text.replaceAll(`{${pKey}}`, params[pKey]);
@@ -517,6 +569,31 @@ var ReadMind = (function (exports) {
             const text = getTranslation$1(el.dataset.langKey, lang);
             if (text && text !== el.dataset.langKey) {
                 el.innerHTML = text;
+            }
+        });
+
+        document.querySelectorAll('[data-lang-attr]').forEach(el => {
+            const attrList = el.dataset.langAttr?.split(',').map(attr => attr.trim()).filter(Boolean) || [];
+            if (!attrList.length) return;
+            const translationKey = el.dataset.langAttrKey || el.dataset.langKey;
+            if (!translationKey) return;
+            const translated = getTranslation$1(translationKey, lang);
+            if (!translated || translated === translationKey) return;
+            attrList.forEach(attrName => {
+                if (attrName === 'textContent') {
+                    el.textContent = translated;
+                } else {
+                    el.setAttribute(attrName, translated);
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-lang-supporting]').forEach(el => {
+            const supportingKey = el.dataset.langSupporting;
+            if (!supportingKey) return;
+            const supportingText = getTranslation$1(supportingKey, lang);
+            if (supportingText && supportingText !== supportingKey) {
+                el.setAttribute('supporting-text', supportingText);
             }
         });
 
@@ -800,7 +877,7 @@ var ReadMind = (function (exports) {
                 // 비밀번호 정책 검사 (회원가입 시에만)
                 const isSignup = dom.authModalTitle?.textContent === getTranslation$1('signupTitle');
                 if (isSignup) {
-                    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+                    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{8,}$/;
                     if (!passwordRegex.test(password)) {
                         showMessage('error_WEAK_PASSWORD', 'error');
                         return;
@@ -825,7 +902,10 @@ var ReadMind = (function (exports) {
                         await runAsyncHandler('onAuthSuccess', { isSignup, token: response.token });
                         showMessage(isSignup ? 'msgSignupSuccess' : 'msgLoginSuccess', 'success');
                     } else {
-                        showMessage(response.error_code || 'msgAuthError', 'error');
+                        const errorKey = response?.error_code
+                            ? (response.error_code.startsWith('error_') ? response.error_code : `error_${response.error_code}`)
+                            : 'msgAuthError';
+                        showMessage(errorKey, 'error');
                         runAsyncHandler('onAuthFailure', response);
                     }
                 } catch (error) {
@@ -883,19 +963,6 @@ var ReadMind = (function (exports) {
      * 문서 관련 버튼에 생성/초기화 동작을 연결한다.
      */
     function setupDocumentEventListeners() {
-        if (dom.newDocumentButton) {
-            dom.newDocumentButton.addEventListener('click', () => {
-                if (dom.textInput) {
-                    dom.textInput.value = '';
-                    if (documentState.simplemde) {
-                        documentState.simplemde.value('');
-                    }
-                    updateTextStats();
-                    scheduleSave();
-                }
-            });
-        }
-        
         if (dom.clearTextButton) {
             dom.clearTextButton.addEventListener('click', () => {
                 if (dom.textInput) {
@@ -914,6 +981,7 @@ var ReadMind = (function (exports) {
      * 동적으로 초기화되는 주요 DOM 요소를 캐시한다.
      */
     function initializeDOMElements() {
+        refreshDomReferences();
         // 통계 요소들을 동적으로 할당
         dom.wordCountDisplay = document.querySelector("[data-stat='word-count']");
         dom.charCountDisplay = document.querySelector("[data-stat='char-count']");
@@ -1690,7 +1758,15 @@ var ReadMind = (function (exports) {
         });
 
         dom.newDocumentButton.addEventListener('click', async () => {
-            const title = prompt("Enter a title for your new document:", "New Document");
+            if (!isLoggedIn()) {
+                showMessage('loginToSeeDocs', 'info');
+                showAuthModal(false);
+                return;
+            }
+
+            const promptMessage = getTranslation$1('newDocumentPrompt');
+            const defaultTitle = getTranslation$1('newDocumentDefaultTitle');
+            const title = prompt(promptMessage || 'Enter a title for your new document:', defaultTitle || 'New Document');
             if (title) {
                 try {
                     const newDoc = await createDocument(title, `# ${title}\n\n`);
@@ -1698,7 +1774,8 @@ var ReadMind = (function (exports) {
                     await renderDocumentList();
                     loadDocument(newDoc);
                 } catch (error) {
-                    showMessage(error.message, 'error');
+                    const errorMessage = typeof error === 'string' ? error : error?.message;
+                    showMessage(errorMessage || 'error_UNKNOWN', 'error');
                 }
             }
         });
@@ -1917,6 +1994,7 @@ var ReadMind = (function (exports) {
      */
     async function initializeApp() {
         try {
+            refreshDomReferences();
             const textInputEl = document.getElementById("text-input");
             if (textInputEl && typeof SimpleMDE === 'function') {
                 documentState.simplemde = new SimpleMDE({
