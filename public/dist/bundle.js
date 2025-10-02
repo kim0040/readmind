@@ -394,6 +394,9 @@ var ReadMind = (function (exports) {
 
     const noop = () => {};
 
+    const MESSAGE_TYPES = ['info', 'success', 'error', 'warning'];
+    let messageHideTimeout = null;
+
     /**
      * 순환 참조를 피하면서 UI 이벤트를 앱 전역 동작과 연결하는 콜백 집합.
      */
@@ -508,7 +511,7 @@ var ReadMind = (function (exports) {
         appState.currentLanguage = lang;
         if (dom.languageSelector) dom.languageSelector.value = lang;
         document.documentElement.lang = lang;
-        
+
         // 모든 번역 가능한 요소 업데이트
         document.querySelectorAll("[data-lang-key]").forEach(el => {
             const text = getTranslation$1(el.dataset.langKey, lang);
@@ -516,7 +519,20 @@ var ReadMind = (function (exports) {
                 el.innerHTML = text;
             }
         });
-        
+
+        const placeholder = getTranslation$1('textInputPlaceholder', lang);
+        if (placeholder) {
+            if (dom.textInput) {
+                dom.textInput.setAttribute('placeholder', placeholder);
+            }
+            if (documentState.simplemde && documentState.simplemde.codemirror) {
+                const inputField = documentState.simplemde.codemirror.getInputField?.();
+                if (inputField) {
+                    inputField.setAttribute('placeholder', placeholder);
+                }
+            }
+        }
+
         // 버튼 상태 업데이트
         updateButtonStates(readerState.isPaused ? "paused" : "initial");
     }
@@ -527,35 +543,68 @@ var ReadMind = (function (exports) {
     function showMessage(messageKey, type = "info", duration = 2000) {
         const messageBox = document.getElementById("custom-message-box");
         if (!messageBox) return;
-        messageBox.querySelector('span').textContent = getTranslation$1(messageKey);
-        messageBox.className = `message-box fixed top-5 left-1/2 -translate-x-1/2 p-4 rounded-md shadow-lg z-[1000] ${type}`;
-        messageBox.classList.add("show");
-        setTimeout(() => messageBox.classList.remove("show"), duration);
+
+        const messageText = messageBox.querySelector('span');
+        if (messageText) {
+            messageText.textContent = getTranslation$1(messageKey);
+        }
+
+        if (messageHideTimeout) {
+            clearTimeout(messageHideTimeout);
+        }
+
+        MESSAGE_TYPES.forEach((cls) => messageBox.classList.remove(cls));
+        messageBox.classList.remove('hidden');
+        messageBox.classList.add(type);
+        messageBox.classList.add('show');
+
+        messageHideTimeout = setTimeout(() => {
+            messageBox.classList.remove('show');
+            messageBox.classList.remove(type);
+            messageBox.classList.add('hidden');
+        }, duration);
     }
 
     /**
      * 읽기 제어 버튼을 지정된 상태에 맞춰 활성/비활성화한다.
      */
     function updateButtonStates(buttonState) {
-        const hasText = dom.textInput && dom.textInput.value.trim().length > 0;
-        dom.startButton.disabled = true;
-        dom.pauseButton.disabled = true;
-        dom.resetButton.disabled = true;
+        if (!dom.startButton || !dom.pauseButton || !dom.resetButton) {
+            return;
+        }
+
+        const editorText = documentState.simplemde ? documentState.simplemde.value() : '';
+        const fallbackText = dom.textInput?.value || '';
+        const hasText = (editorText || fallbackText).trim().length > 0;
+
+        const setDisabled = (el, disabled) => {
+            if (!el) return;
+            el.disabled = disabled;
+            if (disabled) {
+                el.setAttribute('disabled', '');
+            } else {
+                el.removeAttribute('disabled');
+            }
+        };
+
+        setDisabled(dom.startButton, true);
+        setDisabled(dom.pauseButton, true);
+        setDisabled(dom.resetButton, true);
 
         switch (buttonState) {
             case "initial":
-                if (hasText) dom.startButton.disabled = false;
+                if (hasText) setDisabled(dom.startButton, false);
                 break;
             case "reading":
-                dom.pauseButton.disabled = false;
-                dom.resetButton.disabled = false;
+                setDisabled(dom.pauseButton, false);
+                setDisabled(dom.resetButton, false);
                 break;
             case "paused":
-                if (hasText) dom.startButton.disabled = false;
-                dom.resetButton.disabled = false;
+                if (hasText) setDisabled(dom.startButton, false);
+                setDisabled(dom.resetButton, false);
                 break;
             case "completed":
-                dom.resetButton.disabled = false;
+                setDisabled(dom.resetButton, false);
                 break;
         }
         dom.startButton.textContent = getTranslation$1(buttonState === 'paused' ? "resumeButton" : "startButton");
@@ -630,27 +679,35 @@ var ReadMind = (function (exports) {
      * 언어/테마 등 UI 설정 요소에 이벤트를 연결한다.
      */
     function setupGeneralEventListeners() {
-        dom.languageSelector?.addEventListener("change", (event) => {
+        const handleLanguageChange = (event) => {
             const lang = event.target.value;
+            if (!lang || lang === appState.currentLanguage) {
+                return;
+            }
             setLanguage(lang);
+            scheduleSave();
             // 강제 표시 동기화
             setTimeout(() => {
-                if (dom.languageSelector.value !== lang) {
+                if (dom.languageSelector && dom.languageSelector.value !== lang) {
                     dom.languageSelector.value = lang;
                 }
             }, 100);
-        });
-        dom.themeSelector?.addEventListener('change', (e) => {
+        };
+        dom.languageSelector?.addEventListener("input", handleLanguageChange);
+        dom.languageSelector?.addEventListener("change", handleLanguageChange);
+        const handleThemeChange = (e) => {
             const theme = e.target.value;
             applyTheme(theme, appState.isDarkMode);
             scheduleSave();
             // 강제 표시 동기화
             setTimeout(() => {
-                if (dom.themeSelector.value !== theme) {
+                if (dom.themeSelector && dom.themeSelector.value !== theme) {
                     dom.themeSelector.value = theme;
                 }
             }, 100);
-        });
+        };
+        dom.themeSelector?.addEventListener('input', handleThemeChange);
+        dom.themeSelector?.addEventListener('change', handleThemeChange);
         dom.darkModeToggle?.addEventListener("click", () => {
             const isDark = !appState.isDarkMode;
             applyTheme(dom.themeSelector?.value || appState.currentTheme || 'blue', isDark);
@@ -1114,6 +1171,7 @@ var ReadMind = (function (exports) {
             if (dom.readingTimeDisplay) dom.readingTimeDisplay.textContent = '0';
             if (dom.progressInfoDisplay) dom.progressInfoDisplay.textContent = '';
             updateProgressBar();
+            updateButtonStates('initial');
             return;
         }
 
@@ -1146,6 +1204,7 @@ var ReadMind = (function (exports) {
         
         updateProgressBar();
         updateDetailedStats(cleanedText);
+        updateButtonStates(readerState.isPaused ? 'paused' : 'initial');
     }
 
     /**
@@ -1507,6 +1566,9 @@ var ReadMind = (function (exports) {
         if (dom.textInput) {
             dom.textInput.value = doc.content;
         }
+        handleTextChange(doc.content).catch((error) => {
+            console.error('문서 로딩 중 텍스트 갱신 오류:', error);
+        });
         // Highlight the active document in the list
         document.querySelectorAll('#document-list > div').forEach(el => {
             el.classList.toggle('bg-sky-100', el.dataset.id === String(doc.id));
@@ -1520,8 +1582,10 @@ var ReadMind = (function (exports) {
     function scheduleDocumentSave() {
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(async () => {
-            if (documentState.activeDocument && documentState.simplemde) {
-                const newContent = documentState.simplemde.value();
+            if (documentState.activeDocument) {
+                const newContent = documentState.simplemde
+                    ? documentState.simplemde.value()
+                    : (dom.textInput?.value ?? '');
                 // Only save if content has changed
                 if (newContent !== documentState.activeDocument.content) {
                     try {
@@ -1648,6 +1712,14 @@ var ReadMind = (function (exports) {
                     dom.textInput.value = documentState.simplemde.value();
                 }
             }, 500));
+        } else if (dom.textInput) {
+            const debounced = debounce$1(() => {
+                if (documentState.activeDocument) {
+                    scheduleDocumentSave();
+                }
+            }, 600);
+            dom.textInput.addEventListener('input', debounced);
+            dom.textInput.addEventListener('change', debounced);
         }
 
         if(dom.startButton) {
@@ -1845,14 +1917,15 @@ var ReadMind = (function (exports) {
      */
     async function initializeApp() {
         try {
-            if (document.getElementById("text-input")) {
+            const textInputEl = document.getElementById("text-input");
+            if (textInputEl && typeof SimpleMDE === 'function') {
                 documentState.simplemde = new SimpleMDE({
-                    element: document.getElementById("text-input"),
+                    element: textInputEl,
                     spellChecker: false,
                     autosave: { enabled: false },
                     toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
                 });
-                
+
                 const debouncedUpdate = debounce(() => {
                     updateTextStats$1();
                     scheduleSave();
@@ -1862,6 +1935,13 @@ var ReadMind = (function (exports) {
                 documentState.simplemde.codemirror.on('change', () => {
                     debouncedUpdate();
                 });
+            } else if (textInputEl) {
+                const debouncedUpdate = debounce(() => {
+                    updateTextStats$1();
+                    scheduleSave();
+                }, 400);
+                textInputEl.addEventListener('input', debouncedUpdate);
+                textInputEl.addEventListener('change', debouncedUpdate);
             }
 
             await loadAndApplySettings();

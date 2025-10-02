@@ -20,6 +20,9 @@ export function loadDocument(doc) {
     if (dom.textInput) {
         dom.textInput.value = doc.content;
     }
+    handleTextChange(doc.content).catch((error) => {
+        console.error('문서 로딩 중 텍스트 갱신 오류:', error);
+    });
     // Highlight the active document in the list
     document.querySelectorAll('#document-list > div').forEach(el => {
         el.classList.toggle('bg-sky-100', el.dataset.id === String(doc.id));
@@ -33,8 +36,10 @@ export function loadDocument(doc) {
 function scheduleDocumentSave() {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(async () => {
-        if (documentState.activeDocument && documentState.simplemde) {
-            const newContent = documentState.simplemde.value();
+        if (documentState.activeDocument) {
+            const newContent = documentState.simplemde
+                ? documentState.simplemde.value()
+                : (dom.textInput?.value ?? '');
             // Only save if content has changed
             if (newContent !== documentState.activeDocument.content) {
                 try {
@@ -161,6 +166,14 @@ export function attachDocumentEventListeners() {
                 dom.textInput.value = documentState.simplemde.value();
             }
         }, 500));
+    } else if (dom.textInput) {
+        const debounced = debounce(() => {
+            if (documentState.activeDocument) {
+                scheduleDocumentSave();
+            }
+        }, 600);
+        dom.textInput.addEventListener('input', debounced);
+        dom.textInput.addEventListener('change', debounced);
     }
 
     if(dom.startButton) {

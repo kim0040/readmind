@@ -192,14 +192,15 @@ async function loadAndApplySettings() {
  */
 async function initializeApp() {
     try {
-        if (document.getElementById("text-input")) {
+        const textInputEl = document.getElementById("text-input");
+        if (textInputEl && typeof SimpleMDE === 'function') {
             documentState.simplemde = new SimpleMDE({
-                element: document.getElementById("text-input"),
+                element: textInputEl,
                 spellChecker: false,
                 autosave: { enabled: false },
                 toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
             });
-            
+
             const debouncedUpdate = debounce(() => {
                 updateTextStats();
                 scheduleSave();
@@ -209,6 +210,13 @@ async function initializeApp() {
             documentState.simplemde.codemirror.on('change', () => {
                 debouncedUpdate();
             });
+        } else if (textInputEl) {
+            const debouncedUpdate = debounce(() => {
+                updateTextStats();
+                scheduleSave();
+            }, 400);
+            textInputEl.addEventListener('input', debouncedUpdate);
+            textInputEl.addEventListener('change', debouncedUpdate);
         }
 
         await loadAndApplySettings();

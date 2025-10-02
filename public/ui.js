@@ -171,7 +171,7 @@ export function setLanguage(lang, isInitializing = false) {
     appState.currentLanguage = lang;
     if (dom.languageSelector) dom.languageSelector.value = lang;
     document.documentElement.lang = lang;
-    
+
     // 모든 번역 가능한 요소 업데이트
     document.querySelectorAll("[data-lang-key]").forEach(el => {
         const text = getTranslation(el.dataset.langKey, lang);
@@ -179,13 +179,26 @@ export function setLanguage(lang, isInitializing = false) {
             el.innerHTML = text;
         }
     });
-    
+
+    const placeholder = getTranslation('textInputPlaceholder', lang);
+    if (placeholder) {
+        if (dom.textInput) {
+            dom.textInput.setAttribute('placeholder', placeholder);
+        }
+        if (documentState.simplemde && documentState.simplemde.codemirror) {
+            const inputField = documentState.simplemde.codemirror.getInputField?.();
+            if (inputField) {
+                inputField.setAttribute('placeholder', placeholder);
+            }
+        }
+    }
+
     // 버튼 상태 업데이트
     updateButtonStates(readerState.isPaused ? "paused" : "initial");
-    
-    // 초기화가 아닐 때만 통계 업데이트 (순환 호출 방지)
+
+    // 저장은 호출측에서 처리한다 (초기 설정 로드시 중복 저장 방지)
     if (!isInitializing) {
-        // scheduleSave() 호출 제거
+        // no-op placeholder (호출측에서 필요시 후속 처리)
     }
 }
 
@@ -229,24 +242,34 @@ export function updateButtonStates(buttonState) {
     const fallbackText = dom.textInput?.value || '';
     const hasText = (editorText || fallbackText).trim().length > 0;
 
-    dom.startButton.disabled = true;
-    dom.pauseButton.disabled = true;
-    dom.resetButton.disabled = true;
+    const setDisabled = (el, disabled) => {
+        if (!el) return;
+        el.disabled = disabled;
+        if (disabled) {
+            el.setAttribute('disabled', '');
+        } else {
+            el.removeAttribute('disabled');
+        }
+    };
+
+    setDisabled(dom.startButton, true);
+    setDisabled(dom.pauseButton, true);
+    setDisabled(dom.resetButton, true);
 
     switch (buttonState) {
         case "initial":
-            if (hasText) dom.startButton.disabled = false;
+            if (hasText) setDisabled(dom.startButton, false);
             break;
         case "reading":
-            dom.pauseButton.disabled = false;
-            dom.resetButton.disabled = false;
+            setDisabled(dom.pauseButton, false);
+            setDisabled(dom.resetButton, false);
             break;
         case "paused":
-            if (hasText) dom.startButton.disabled = false;
-            dom.resetButton.disabled = false;
+            if (hasText) setDisabled(dom.startButton, false);
+            setDisabled(dom.resetButton, false);
             break;
         case "completed":
-            dom.resetButton.disabled = false;
+            setDisabled(dom.resetButton, false);
             break;
     }
     dom.startButton.textContent = getTranslation(buttonState === 'paused' ? "resumeButton" : "startButton");
@@ -321,16 +344,22 @@ function setupReaderControls() {
  * 언어/테마 등 UI 설정 요소에 이벤트를 연결한다.
  */
 function setupGeneralEventListeners() {
-    dom.languageSelector?.addEventListener("change", (event) => {
+    const handleLanguageChange = (event) => {
         const lang = event.target.value;
+        if (!lang || lang === appState.currentLanguage) {
+            return;
+        }
         setLanguage(lang);
+        scheduleSave();
         // 강제 표시 동기화
         setTimeout(() => {
-            if (dom.languageSelector.value !== lang) {
+            if (dom.languageSelector && dom.languageSelector.value !== lang) {
                 dom.languageSelector.value = lang;
             }
         }, 100);
-    });
+    };
+    dom.languageSelector?.addEventListener("input", handleLanguageChange);
+    dom.languageSelector?.addEventListener("change", handleLanguageChange);
     const handleThemeChange = (e) => {
         const theme = e.target.value;
         applyTheme(theme, appState.isDarkMode);
